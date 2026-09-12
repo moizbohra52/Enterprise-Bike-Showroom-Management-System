@@ -11,6 +11,8 @@ class AppRoutes {
   // Shell
   static const String dashboard = '/dashboard';
   static const String forbidden = '/forbidden';
+  static const String notFound = '/not-found';
+  static const String search = '/search';
 
   // Showrooms
   static const String showrooms = '/showrooms';
@@ -83,6 +85,7 @@ class AppRoutes {
 
   // Accounting
   static const String accounting = '/accounting';
+  static const String accountingAccounts = '/accounting/accounts';
   static const String accountForm = '/accounting/accounts/form';
   static const String accountingManualEntry = '/accounting/manual-entry';
   static const String accountingTransactions = '/accounting/transactions';

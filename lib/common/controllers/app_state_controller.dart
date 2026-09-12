@@ -26,9 +26,10 @@ class AppStateController extends GetxController {
   /// Push notifications toggle (device-level preference).
   final RxBool notificationsEnabled = true.obs;
 
-  /// Theme data cache (rebuilt on accent change).
-  ThemeData lightTheme = AppTheme.light();
-  ThemeData darkTheme = AppTheme.dark();
+  /// Theme data cache (rebuilt on accent change). Exposed reactively so the
+  /// root widget repaints when the accent or brightness preference changes.
+  final Rx<ThemeData> lightTheme = AppTheme.light().obs;
+  final Rx<ThemeData> darkTheme = AppTheme.dark().obs;
 
   /// Loads persisted preferences.
   Future<void> load() async {
@@ -69,8 +70,8 @@ class AppStateController extends GetxController {
 
   void _applyAccent(int? accentValue) {
     if (accentValue == null) {
-      lightTheme = AppTheme.light();
-      darkTheme = AppTheme.dark();
+      lightTheme.value = AppTheme.light();
+      darkTheme.value = AppTheme.dark();
       return;
     }
     final MaterialColor accent = MaterialColor(accentValue, <int, Color>{
@@ -85,8 +86,8 @@ class AppStateController extends GetxController {
       800: Color(accentValue).withAlpha(230),
       900: Color(accentValue).withAlpha(250),
     });
-    lightTheme = AppTheme.light(accent: accent);
-    darkTheme = AppTheme.dark(accent: accent);
+    lightTheme.value = AppTheme.light(accent: accent);
+    darkTheme.value = AppTheme.dark(accent: accent);
   }
 
   /// Sets + persists the language code.

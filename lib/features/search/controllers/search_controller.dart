@@ -6,8 +6,8 @@ import 'package:enterprise_bike_showroom/features/search/repositories/search_rep
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
 
 /// Debounced global search across the business entities.
-class SearchController extends GetxController {
-  SearchController(this.repository);
+class GlobalSearchController extends GetxController {
+  GlobalSearchController(this.repository);
 
   final SearchRepository repository;
 

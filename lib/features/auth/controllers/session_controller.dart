@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthEvent, AuthState;
@@ -40,7 +42,7 @@ class SessionController extends GetxController {
   final RxBool isAuthReady = false.obs;
   final RxBool profileLoading = false.obs;
 
-  Worker? _authWorker;
+  StreamSubscription<AuthState>? _authSubscription;
 
   bool get isAuthenticated => user.value != null;
   bool get isSuperAdmin => user.value?.isSuperAdmin ?? false;
@@ -95,10 +97,8 @@ class SessionController extends GetxController {
   /// - watches auth state (login/logout/refresh)
   /// - loads the profile when a session exists
   Future<void> bootstrap() async {
-    _authWorker = ever<AuthState>(
-      authService.authChanges,
-      _onAuthStateChanged,
-    );
+    _authSubscription ??=
+        authService.authChanges.listen(_onAuthStateChanged);
     if (authService.hasSession) {
       await _loadProfile();
     } else {
@@ -110,9 +110,15 @@ class SessionController extends GetxController {
   Future<void> _onAuthStateChanged(AuthState state) async {
     switch (state.eventName) {
       case AuthEvent.signedIn:
-        await notificationService?.registerToken(
-          userId: state.session?.user?.id ?? '',
-        );
+        // Push registration must never block the profile load.
+        try {
+          await notificationService?.registerToken(
+            userId: state.session?.user?.id ?? '',
+          );
+        } catch (e) {
+          AppLogger.warning('SESSION', 'push token registration failed',
+              error: e);
+        }
         await _loadProfile();
       case AuthEvent.signedOut:
         await _clearSession();
@@ -211,7 +217,8 @@ class SessionController extends GetxController {
 
   @override
   void onClose() {
-    _authWorker?.dispose();
+    unawaited(_authSubscription?.cancel());
+    _authSubscription = null;
     super.onClose();
   }
 }

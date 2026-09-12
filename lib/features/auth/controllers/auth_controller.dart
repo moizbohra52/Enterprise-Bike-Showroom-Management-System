@@ -120,6 +120,36 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Completes a password reset (entered from the Supabase reset link).
+  Future<bool> resetPassword() async {
+    errorMessage.value = '';
+    final String password = passwordController.text;
+    final String confirm = confirmController.text;
+    final String? passError = validatePassword(password);
+    if (passError != null) {
+      errorMessage.value = passError;
+      return false;
+    }
+    if (password != confirm) {
+      errorMessage.value = 'Passwords do not match.';
+      return false;
+    }
+    isSubmitting.value = true;
+    try {
+      await authService.updatePassword(password);
+      successMessage.value = 'Password updated. You can sign in now.';
+      return true;
+    } on AppException catch (e) {
+      errorMessage.value = e.message;
+      return false;
+    } catch (e) {
+      errorMessage.value = ErrorMapper.friendly(e);
+      return false;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
   /// Signs out and returns to the login screen.
   Future<void> signOut() async {
     isLoading.value = true;
@@ -133,6 +163,14 @@ class AuthController extends GetxController {
   }
 
   void toggleObscure() => obscurePassword.value = !obscurePassword.value;
+
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmController.dispose();
+    super.onClose();
+  }
 
   void clearMessages() {
     errorMessage.value = '';
