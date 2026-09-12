@@ -1,0 +1,67 @@
+name: enterprise_bike_showroom
+description: "Enterprise-grade, multi-showroom Bike Showroom Management System built with Flutter, GetX and Supabase."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management, dependency injection, routing
+  get: ^4.6.6
+
+  # Networking (centralized REST client)
+  dio: ^5.4.3
+
+  # Backend: PostgreSQL, Auth, Storage, Realtime, RPC
+  supabase_flutter: ^2.5.0
+
+  # Push notifications
+  firebase_core: ^3.4.0
+  firebase_messaging: ^15.1.0
+
+  # Lightweight local preferences
+  shared_preferences: ^2.2.3
+
+  # Offline cache / drafts / sync queue
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.3
+
+  # Secure storage for sensitive local values
+  flutter_secure_storage: ^9.2.2
+
+  # Utilities
+  intl: 0.19.0
+  uuid: ^4.3.3
+  connectivity_plus: ^6.0.3
+  permission_handler: ^11.3.1
+  device_info_plus: ^10.1.0
+  url_launcher: ^6.3.0
+  image: ^4.2.0
+  image_picker: ^1.1.2
+  cached_network_image: ^3.3.1
+
+  # Charts and document export
+  fl_chart: ^0.69.0
+  pdf: ^3.10.8
+  printing: ^5.12.0
+  excel: ^4.0.3
+  csv: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
