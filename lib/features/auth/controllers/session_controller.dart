@@ -42,6 +42,7 @@ class SessionController extends GetxController {
   final RxBool isAuthReady = false.obs;
   final RxBool profileLoading = false.obs;
 
+  /// Auth-state subscription (created by [bootstrap]).
   StreamSubscription<AuthState>? _authSubscription;
 
   bool get isAuthenticated => user.value != null;
@@ -86,7 +87,7 @@ class SessionController extends GetxController {
   /// SUPER ADMIN implicitly holds every permission.
   bool can(String permission) {
     if (isSuperAdmin) return true;
-    return PermissionService.has(permissions, permission);
+    return PermissionService.hasExact(permissions, permission);
   }
 
   /// Module-level convenience: does the user have `module.action`?
@@ -110,15 +111,9 @@ class SessionController extends GetxController {
   Future<void> _onAuthStateChanged(AuthState state) async {
     switch (state.eventName) {
       case AuthEvent.signedIn:
-        // Push registration must never block the profile load.
-        try {
-          await notificationService?.registerToken(
-            userId: state.session?.user?.id ?? '',
-          );
-        } catch (e) {
-          AppLogger.warning('SESSION', 'push token registration failed',
-              error: e);
-        }
+        await notificationService?.registerToken(
+          userId: state.session?.user?.id ?? '',
+        );
         await _loadProfile();
       case AuthEvent.signedOut:
         await _clearSession();
@@ -217,7 +212,7 @@ class SessionController extends GetxController {
 
   @override
   void onClose() {
-    unawaited(_authSubscription?.cancel());
+    _authSubscription?.cancel();
     _authSubscription = null;
     super.onClose();
   }

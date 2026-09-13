@@ -1,135 +1,83 @@
+import 'package:enterprise_bike_showroom/common/widgets/app_button.dart';
+import 'package:enterprise_bike_showroom/common/widgets/app_snackbar.dart';
+import 'package:enterprise_bike_showroom/common/widgets/app_text_field.dart';
+import 'package:enterprise_bike_showroom/config/theme_config.dart';
+import 'package:enterprise_bike_showroom/features/auth/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:enterprise_bike_showroom/common/widgets/app_button.dart';
-import 'package:enterprise_bike_showroom/common/widgets/app_card.dart';
-import 'package:enterprise_bike_showroom/common/widgets/app_dialog.dart';
-import 'package:enterprise_bike_showroom/common/widgets/app_snackbar.dart';
-import 'package:enterprise_bike_showroom/common/widgets/app_text_field.dart';
-import 'package:enterprise_bike_showroom/core/extensions/context_extensions.dart';
-import 'package:enterprise_bike_showroom/features/auth/controllers/auth_controller.dart';
-import 'package:enterprise_bike_showroom/routes/app_routes.dart';
-
-/// Sends the Supabase password-reset email.
-class ForgotPasswordView extends StatefulWidget {
+/// Requests a password reset email.
+class ForgotPasswordView extends GetView<AuthController> {
   const ForgotPasswordView({super.key});
 
   @override
-  State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
-}
-
-class _ForgotPasswordViewState extends State<ForgotPasswordView> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  AuthController get _auth => Get.find<AuthController>();
-
-  Future<void> _submit() async {
-    final FormState? form = _formKey.currentState;
-    if (form != null && !form.validate()) return;
-    FocusScope.of(context).unfocus();
-    final bool ok = await _auth.requestPasswordReset();
-    if (!mounted) return;
-    if (!ok) {
-      AppSnackbar.error(context, _auth.errorMessage.value);
-      return;
-    }
-    await AppDialog.show(
-      context,
-      title: 'Reset link sent',
-      message: 'If that email belongs to an account, a password reset link is '
-          'on its way. Open it and continue here.',
-      icon: Icons.mark_email_read_outlined,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset your password')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: AppCard(
-                padding: 28,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Icon(
-                        Icons.lock_reset_outlined,
-                        size: 40,
-                        color: context.colors.primary,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Forgot password?',
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Enter your work email and we will send you a secure '
-                        'reset link.',
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: context.colors.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      AppTextField(
-                        controller: _auth.emailController,
-                        label: 'Email',
-                        hint: 'manager@showroom.in',
-                        prefixIcon: Icons.alternate_email,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        validator: _auth.validateEmail,
-                        onSubmitted: (_) => _submit(),
-                      ),
-                      Obx(() {
-                        final String error = _auth.errorMessage.value;
-                        if (error.isEmpty) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            error,
-                            style: TextStyle(
-                              color: context.colors.error,
-                              fontSize: 13,
-                            ),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 20),
-                      Obx(
-                        () => AppButton(
-                          label: 'Send reset link',
-                          icon: Icons.send_outlined,
-                          size: AppButtonSize.large,
-                          expanded: true,
-                          isLoading: _auth.isSubmitting.value,
-                          onPressed: _submit,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => Get.offAllNamed(AppRoutes.login),
-                        child: const Text('Back to sign in'),
-                      ),
-                    ],
+      appBar: AppBar(title: const Text('Reset password')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'Enter the email address of your account and we will send '
+                    'you a link to choose a new password.',
+                    style: theme.textTheme.bodyMedium,
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+                  AppTextField(
+                    controller: controller.emailController,
+                    label: 'Work email',
+                    prefixIcon: Icons.mail_outline,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: controller.validateEmail,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Obx(
+                    () => AppButton(
+                      label: 'Send reset link',
+                      icon: Icons.send_outlined,
+                      expanded: true,
+                      isLoading: controller.isSubmitting.value,
+                      onPressed: controller.isSubmitting.value
+                          ? null
+                          : () => _send(context),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Obx(
+                    () => Text(
+                      controller.errorMessage.value.isNotEmpty
+                          ? controller.errorMessage.value
+                          : controller.successMessage.value,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: controller.errorMessage.value.isNotEmpty
+                            ? AppColors.error
+                            : AppColors.success,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _send(BuildContext context) async {
+    controller.clearMessages();
+    final bool sent = await controller.requestPasswordReset();
+    if (sent) AppSnackbar.success(context, controller.successMessage.value);
   }
 }

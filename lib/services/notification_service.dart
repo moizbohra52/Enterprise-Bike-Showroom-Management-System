@@ -1,8 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:firebase_core/firebase_core.dart' show Firebase;
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:firebase_core/firebase_core.dart' show FirebaseApp;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -40,30 +39,27 @@ class NotificationService {
   /// The last fetched FCM token (null on web / when unavailable).
   String? get currentToken => _currentToken;
 
-  /// Push is only available on mobile/desktop builds with a Firebase config.
-  bool get supported => !kIsWeb;
+  bool get supported => defaultTargetPlatform != defaultTargetPlatformValue.web
+      ? true
+      : FirebasePlatform.isAvailable;
 
   /// Platform name stored with the token.
   String get platformName {
-    if (kIsWeb) return 'web';
     switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
+      case defaultTargetPlatformValue.android:
         return 'android';
-      case TargetPlatform.iOS:
+      case defaultTargetPlatformValue.iOS:
         return 'ios';
-      case TargetPlatform.windows:
+      case defaultTargetPlatformValue.windows:
         return 'windows';
-      case TargetPlatform.macOS:
-        return 'macos';
-      case TargetPlatform.linux:
-      case TargetPlatform.fuchsia:
-        return 'linux';
+      default:
+        return 'web';
     }
   }
 
   /// Initializes messaging listeners (safe no-op where FCM is unavailable).
   Future<void> init() async {
-    if (!supported || Firebase.apps.isEmpty) {
+    if (!Firebase.appExists('default')) {
       AppLogger.warning('FCM', 'Firebase not initialized; push disabled');
       return;
     }
@@ -74,8 +70,8 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      final RemoteMessage? launch = await messaging.getInitialMessage();
-      if (launch != null) _onOpened(launch);
+      messaging.onIosActivate.listen(_onOpened);
+      messaging.onIosRefresh.listen((_) {});
       _foregroundSub = messaging.onMessage.listen(_onForeground);
       _openedSub = messaging.onMessageOpenedApp.listen(_onOpened);
       AppLogger.info('FCM', 'initialized');
@@ -184,15 +180,14 @@ class NotificationService {
   Future<String> _deviceName() async {
     try {
       final DeviceInfoPlugin info = DeviceInfoPlugin();
-      if (kIsWeb) return 'Web browser';
       switch (defaultTargetPlatform) {
-        case TargetPlatform.android:
+        case defaultTargetPlatformValue.android:
           final AndroidDeviceInfo d = await info.androidInfo;
           return '${d.brand} ${d.model}';
-        case TargetPlatform.iOS:
+        case defaultTargetPlatformValue.iOS:
           final IosDeviceInfo d = await info.iosInfo;
           return '${d.name} ${d.model}';
-        case TargetPlatform.windows:
+        case defaultTargetPlatformValue.windows:
           final WindowsDeviceInfo d = await info.windowsInfo;
           return 'Windows ${d.releaseId}';
         default:

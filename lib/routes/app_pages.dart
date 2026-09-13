@@ -1,8 +1,5 @@
-import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
-
-import 'package:enterprise_bike_showroom/common/routing/route_guard.dart';
-import 'package:enterprise_bike_showroom/common/views/not_found_view.dart';
+import 'package:enterprise_bike_showroom/common/views/forbidden_view.dart';
+import 'package:enterprise_bike_showroom/common/views/module_pending_view.dart';
 import 'package:enterprise_bike_showroom/core/constants/permission_constants.dart';
 import 'package:enterprise_bike_showroom/features/accounting/bindings/accounting_binding.dart';
 import 'package:enterprise_bike_showroom/features/accounting/views/account_form_view.dart';
@@ -11,7 +8,6 @@ import 'package:enterprise_bike_showroom/features/accounting/views/journal_detai
 import 'package:enterprise_bike_showroom/features/accounting/views/journal_list_view.dart';
 import 'package:enterprise_bike_showroom/features/accounting/views/manual_entry_view.dart';
 import 'package:enterprise_bike_showroom/features/auth/bindings/auth_binding.dart';
-import 'package:enterprise_bike_showroom/features/auth/views/forbidden_view.dart';
 import 'package:enterprise_bike_showroom/features/auth/views/forgot_password_view.dart';
 import 'package:enterprise_bike_showroom/features/auth/views/login_view.dart';
 import 'package:enterprise_bike_showroom/features/auth/views/reset_password_view.dart';
@@ -73,7 +69,6 @@ import 'package:enterprise_bike_showroom/features/sales/bindings/sale_binding.da
 import 'package:enterprise_bike_showroom/features/sales/views/sale_details_view.dart';
 import 'package:enterprise_bike_showroom/features/sales/views/sale_form_view.dart';
 import 'package:enterprise_bike_showroom/features/sales/views/sale_list_view.dart';
-import 'package:enterprise_bike_showroom/features/search/views/global_search_view.dart';
 import 'package:enterprise_bike_showroom/features/service/bindings/service_binding.dart';
 import 'package:enterprise_bike_showroom/features/service/views/service_details_view.dart';
 import 'package:enterprise_bike_showroom/features/service/views/service_form_view.dart';
@@ -83,538 +78,518 @@ import 'package:enterprise_bike_showroom/features/showroom/bindings/showroom_bin
 import 'package:enterprise_bike_showroom/features/showroom/views/showroom_details_view.dart';
 import 'package:enterprise_bike_showroom/features/showroom/views/showroom_form_view.dart';
 import 'package:enterprise_bike_showroom/features/showroom/views/showroom_list_view.dart';
+import 'package:enterprise_bike_showroom/features/users/bindings/users_binding.dart';
+import 'package:enterprise_bike_showroom/features/users/views/user_form_view.dart';
+import 'package:enterprise_bike_showroom/features/users/views/users_view.dart';
 import 'package:enterprise_bike_showroom/features/warranty/bindings/warranty_binding.dart';
 import 'package:enterprise_bike_showroom/features/warranty/views/warranty_details_view.dart';
 import 'package:enterprise_bike_showroom/features/warranty/views/warranty_list_view.dart';
+import 'package:enterprise_bike_showroom/routes/app_middleware.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-/// Runs several module bindings for one route.
+/// The centralized route table.
 ///
-/// Needed where a page reads a repository owned by another module (purchase
-/// forms pick products) or where a page needs `AuthController` outside the
-/// auth flow (the profile menu signs out from Settings).
-class CompositeBinding extends Bindings {
-  CompositeBinding(this.bindings);
-
-  final List<Bindings> bindings;
-
-  @override
-  void dependencies() {
-    for (final Bindings binding in bindings) {
-      binding.dependencies();
-    }
-  }
-}
-
-/// The route table: every `AppRoutes` constant that has a page.
-///
-/// Convention:
-/// - `name` may end with `/:id?` so both `/x/details/<id>` (path) and
-///   `/x/details?id=<id>` (query, used by controllers) resolve;
-/// - protected pages are wrapped in [RouteGuard] with the module `*.view`
-///   permission;
-/// - module `Bindings` provide repositories + controllers lazily.
+/// Every route declared in [AppRoutes] is registered: implemented screens use
+/// their feature view + binding, screens that do not exist yet render
+/// [ModulePendingView] so navigation never dead-ends. Protected routes carry
+/// [AuthMiddleware] (session) and, where a module permission applies,
+/// [PermissionMiddleware].
 class AppPages {
   AppPages._();
 
-  /// First route shown by `GetMaterialApp`.
+  /// Route shown when the app starts.
   static const String initial = AppRoutes.splash;
 
+  /// All pages, in navigation order.
   static final List<GetPage<dynamic>> pages = <GetPage<dynamic>>[
-    // ------------------------------------------------------------------ auth
-    _page(
-      name: AppRoutes.splash,
-      builder: () => const SplashView(),
-      binding: AuthBinding(),
-      allowUnauthenticated: true,
-      transition: Transition.fadeIn,
-    ),
-    _page(
-      name: AppRoutes.login,
-      builder: () => const LoginView(),
-      binding: AuthBinding(),
-      allowUnauthenticated: true,
-      transition: Transition.fadeIn,
-    ),
-    _page(
-      name: AppRoutes.forgotPassword,
-      builder: () => const ForgotPasswordView(),
-      binding: AuthBinding(),
-      allowUnauthenticated: true,
-      transition: Transition.fadeIn,
-    ),
-    _page(
-      name: AppRoutes.resetPassword,
-      builder: () => const ResetPasswordView(),
-      binding: AuthBinding(),
-      allowUnauthenticated: true,
-      transition: Transition.fadeIn,
-    ),
-
-    // ----------------------------------------------------------------- shell
-    _page(
-      name: AppRoutes.dashboard,
-      builder: () => const DashboardView(),
-      binding: DashboardBinding(),
-      permission: Permissions.dashboardView,
-    ),
-    _page(
-      // Available to every signed-in user: the top bar offers search on all
-      // screens, so it is guarded by authentication only.
-      name: AppRoutes.search,
-      builder: () => const GlobalSearchView(),
-    ),
-    GetPage<dynamic>(
-      name: AppRoutes.forbidden,
-      page: () => ForbiddenView(permission: _argumentPermission()),
-      transition: Transition.fadeIn,
-    ),
-
-    // -------------------------------------------------------------- showrooms
-    _page(
-      name: AppRoutes.showrooms,
-      builder: () => const ShowroomListView(),
-      binding: ShowroomBinding(),
-      permission: Permissions.showroomView,
-    ),
-    _page(
-      name: '${AppRoutes.showroomForm}/:id?',
-      builder: () => const ShowroomFormView(),
-      binding: ShowroomBinding(),
-      permission: Permissions.showroomView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.showroomDetails}/:id?',
-      builder: () => const ShowroomDetailsView(),
-      binding: ShowroomBinding(),
-      permission: Permissions.showroomView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // --------------------------------------------------------------- products
-    _page(
-      name: AppRoutes.products,
-      builder: () => const ProductListView(),
-      binding: ProductBinding(),
-      permission: Permissions.productsView,
-    ),
-    _page(
-      name: '${AppRoutes.productForm}/:id?',
-      builder: () => const ProductFormView(),
-      binding: ProductBinding(),
-      permission: Permissions.productsView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.productDetails}/:id?',
-      builder: () => const ProductDetailsView(),
-      binding: ProductBinding(),
-      permission: Permissions.productsView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // -------------------------------------------------------------- inventory
-    _page(
-      name: AppRoutes.inventory,
-      builder: () => const InventoryListView(),
-      binding: InventoryBinding(),
-      permission: Permissions.inventoryView,
-    ),
-    _page(
-      name: '${AppRoutes.inventoryDetails}/:id?',
-      builder: () => const InventoryDetailsView(),
-      binding: InventoryBinding(),
-      permission: Permissions.inventoryView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.stockIn,
-      builder: () => const StockInView(),
-      binding: InventoryBinding(),
-      permission: Permissions.inventoryView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.stockTransfer,
-      builder: () => const StockTransferView(),
-      binding: InventoryBinding(),
-      permission: Permissions.inventoryTransfer,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.stockAdjust,
-      builder: () => const StockAdjustView(),
-      binding: InventoryBinding(),
-      permission: Permissions.inventoryAdjust,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ------------------------------------------------------ customers/vehicles
-    _page(
-      name: AppRoutes.customers,
-      builder: () => const CustomerListView(),
-      binding: CustomerBinding(),
-      permission: Permissions.customersView,
-    ),
-    _page(
-      name: '${AppRoutes.customerForm}/:id?',
-      builder: () => const CustomerFormView(),
-      binding: CustomerBinding(),
-      permission: Permissions.customersView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.customerDetails}/:id?',
-      builder: () => const CustomerDetailsView(),
-      binding: CustomerBinding(),
-      permission: Permissions.customersView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.vehicleDetails}/:id?',
-      builder: () => const VehicleDetailsView(),
-      binding: CustomerBinding(),
-      permission: Permissions.customersView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ------------------------------------------------------------------ sales
-    _page(
-      name: AppRoutes.sales,
-      builder: () => const SaleListView(),
-      binding: SaleBinding(),
-      permission: Permissions.salesView,
-    ),
-    _page(
-      name: '${AppRoutes.saleForm}/:id?',
-      builder: () => const SaleFormView(),
-      binding: CompositeBinding(<Bindings>[
-        const SaleBinding(),
-        const CustomerBinding(),
-        const InventoryBinding(),
-      ]),
-      permission: Permissions.salesView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.saleDetails}/:id?',
-      builder: () => const SaleDetailsView(),
-      binding: SaleBinding(),
-      permission: Permissions.salesView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ---------------------------------------------------------------- billing
-    _page(
-      name: AppRoutes.billing,
-      builder: () => const InvoiceListView(),
-      binding: InvoiceBinding(),
-      permission: Permissions.billingView,
-    ),
-    _page(
-      name: '${AppRoutes.invoiceDetails}/:id?',
-      builder: () => const InvoiceDetailsView(),
-      binding: InvoiceBinding(),
-      permission: Permissions.billingView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // --------------------------------------------------------------- payments
-    _page(
-      name: AppRoutes.payments,
-      builder: () => const PaymentListView(),
-      binding: PaymentBinding(),
-      permission: Permissions.paymentsView,
-    ),
-    _page(
-      name: '${AppRoutes.paymentForm}/:id?',
-      builder: () => const PaymentFormView(),
-      binding: PaymentBinding(),
-      permission: Permissions.paymentsView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.paymentDetails}/:id?',
-      builder: () => const PaymentDetailsView(),
-      binding: PaymentBinding(),
-      permission: Permissions.paymentsView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ----------------------------------------------------- finance / loans / emi
-    _page(
-      name: AppRoutes.finance,
-      builder: () => const LoanListView(),
-      binding: LoanBinding(),
-      permission: Permissions.financeView,
-    ),
-    _page(
-      name: AppRoutes.loans,
-      builder: () => const LoanListView(),
-      binding: LoanBinding(),
-      permission: Permissions.financeView,
-    ),
-    _page(
-      name: '${AppRoutes.loanDetails}/:id?',
-      builder: () => const LoanDetailsView(),
-      binding: LoanBinding(),
-      permission: Permissions.financeView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ------------------------------------------------------------ purchases
-    _page(
-      name: AppRoutes.purchases,
-      builder: () => const PurchaseListView(),
-      binding: PurchaseBinding(),
-      permission: Permissions.purchasesView,
-    ),
-    _page(
-      name: '${AppRoutes.purchaseForm}/:id?',
-      builder: () => const PurchaseFormView(),
-      binding: PurchaseBinding(),
-      permission: Permissions.purchasesView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.purchaseDetails}/:id?',
-      builder: () => const PurchaseDetailsView(),
-      binding: PurchaseBinding(),
-      permission: Permissions.purchasesView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.suppliers,
-      builder: () => const SupplierListView(),
-      binding: PurchaseBinding(),
-      permission: Permissions.purchasesView,
-    ),
-    _page(
-      name: '${AppRoutes.supplierForm}/:id?',
-      builder: () => const SupplierFormView(),
-      binding: PurchaseBinding(),
-      permission: Permissions.purchasesView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // --------------------------------------------------------------- expenses
-    _page(
-      name: AppRoutes.expenses,
-      builder: () => const ExpenseListView(),
-      binding: ExpenseBinding(),
-      permission: Permissions.expensesView,
-    ),
-    _page(
-      name: '${AppRoutes.expenseForm}/:id?',
-      builder: () => const ExpenseFormView(),
-      binding: ExpenseBinding(),
-      permission: Permissions.expensesView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.expenseDetails}/:id?',
-      builder: () => const ExpenseDetailsView(),
-      binding: ExpenseBinding(),
-      permission: Permissions.expensesView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ------------------------------------------------------------- accounting
-    _page(
-      name: AppRoutes.accounting,
-      builder: () => const JournalListView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingView,
-    ),
-    _page(
-      name: AppRoutes.accountingTransactions,
-      builder: () => const JournalListView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingView,
-    ),
-    _page(
-      name: '${AppRoutes.accountingTransactionDetails}/:id?',
-      builder: () => const JournalDetailsView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.accountingManualEntry,
-      builder: () => const ManualEntryView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingEdit,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.accountForm}/:id?',
-      builder: () => const AccountFormView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.accountingAccounts,
-      builder: () => const AccountListView(),
-      binding: AccountingBinding(),
-      permission: Permissions.accountingView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // ---------------------------------------------------------------- service
-    _page(
-      name: AppRoutes.service,
-      builder: () => const ServiceListView(),
-      binding: ServiceBinding(),
-      permission: Permissions.serviceView,
-    ),
-    _page(
-      name: '${AppRoutes.serviceForm}/:id?',
-      builder: () => const ServiceFormView(),
-      binding: ServiceBinding(),
-      permission: Permissions.serviceView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.serviceDetails}/:id?',
-      builder: () => const ServiceDetailsView(),
-      binding: ServiceBinding(),
-      permission: Permissions.serviceView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.freeService,
-      builder: () => const FreeServiceView(),
-      binding: FreeServiceBinding(),
-      permission: Permissions.serviceView,
-    ),
-
-    // ---------------------------------------------------- warranty/insurance
-    _page(
-      name: AppRoutes.warranty,
-      builder: () => const WarrantyListView(),
-      binding: WarrantyBinding(),
-      permission: Permissions.warrantyView,
-    ),
-    _page(
-      name: '${AppRoutes.warrantyDetails}/:id?',
-      builder: () => const WarrantyDetailsView(),
-      binding: WarrantyBinding(),
-      permission: Permissions.warrantyView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.insurance,
-      builder: () => const InsuranceListView(),
-      binding: InsuranceBinding(),
-      permission: Permissions.insuranceView,
-    ),
-    _page(
-      name: '${AppRoutes.insuranceForm}/:id?',
-      builder: () => const InsuranceFormView(),
-      binding: InsuranceBinding(),
-      permission: Permissions.insuranceView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: '${AppRoutes.insuranceDetails}/:id?',
-      builder: () => const InsuranceDetailsView(),
-      binding: InsuranceBinding(),
-      permission: Permissions.insuranceView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // --------------------------------------------------- reminders & messages
-    _page(
-      name: AppRoutes.reminders,
-      builder: () => const ReminderListView(),
-      binding: ReminderBinding(),
-      permission: Permissions.remindersView,
-    ),
-    _page(
-      name: '${AppRoutes.remindersForm}/:id?',
-      builder: () => const ReminderFormView(),
-      binding: ReminderBinding(),
-      permission: Permissions.remindersView,
-      transition: Transition.rightToLeft,
-    ),
-    _page(
-      name: AppRoutes.notifications,
-      builder: () => const NotificationListView(),
-      permission: Permissions.notificationsView,
-    ),
-
-    // ---------------------------------------------------------------- reports
-    _page(
-      name: AppRoutes.reports,
-      builder: () => const ReportCatalogView(),
-      binding: ReportBinding(),
-      permission: Permissions.reportsView,
-    ),
-    _page(
-      name: '${AppRoutes.report}/:key?',
-      builder: () => const ReportView(),
-      binding: ReportBinding(),
-      permission: Permissions.reportsView,
-      transition: Transition.rightToLeft,
-    ),
-
-    // --------------------------------------------------- documents & settings
-    _page(
-      name: AppRoutes.documents,
-      builder: () => const DocumentListView(),
-      binding: DocumentBinding(),
-      permission: Permissions.documentsView,
-    ),
-    _page(
-      name: AppRoutes.audit,
-      builder: () => const AuditLogView(),
-      binding: DocumentBinding(),
-      permission: Permissions.auditView,
-    ),
-    _page(
-      name: AppRoutes.settings,
-      builder: () => const SettingsView(),
-      binding: AuthBinding(),
-      permission: Permissions.settingsView,
-    ),
+    ..._publicPages,
+    ..._overviewPages,
+    ..._administrationPages,
+    ..._catalogPages,
+    ..._customerPages,
+    ..._salesPages,
+    ..._financePages,
+    ..._operationsPages,
+    ..._afterSalesPages,
+    ..._insightPages,
   ];
 
-  /// Note: the Settings route also runs `AuthBinding`, because profile-menu
-  /// sign-out is implemented on `AuthController` (outside the auth flow).
+  // ------------------------------------------------------------- guards
 
-  /// `unknownRoute` target (route not present in [pages]).
-  static GetPage<dynamic> get unknownRoute => GetPage<dynamic>(
-        name: AppRoutes.notFound,
-        page: () => NotFoundView(route: Get.currentRoute),
-      );
+  static List<GetMiddleware> get _auth => <GetMiddleware>[AuthMiddleware()];
 
-  /// Builds a guarded page.
-  static GetPage<dynamic> _page({
-    required String name,
-    required Widget Function() builder,
+  static List<GetMiddleware> _guard(String permission) => <GetMiddleware>[
+        AuthMiddleware(),
+        PermissionMiddleware(permission),
+      ];
+
+  static GetPage<dynamic> _page(
+    String name,
+    Widget Function() page, {
     Bindings? binding,
-    String? permission,
-    bool allowUnauthenticated = false,
-    Transition? transition,
+    List<GetMiddleware>? middlewares,
   }) {
     return GetPage<dynamic>(
       name: name,
+      page: page,
       binding: binding,
-      transition: transition,
-      page: () => RouteGuard(
-        permission: permission,
-        allowUnauthenticated: allowUnauthenticated,
-        child: builder(),
-      ),
+      middlewares: middlewares ?? const <GetMiddleware>[],
     );
   }
 
-  /// Permission passed as route arguments by the dashboard/`RouteGuard`
-  /// when sending the user to the forbidden screen.
-  static String? _argumentPermission() {
-    final Object? args = Get.arguments;
-    return args is String ? args : null;
+  /// A declared route whose screen has not been built yet.
+  static GetPage<dynamic> _pending(String name, String label) {
+    return _page(
+      name,
+      () => ModulePendingView(module: label),
+      middlewares: _auth,
+    );
   }
+
+  // -------------------------------------------------------------- public
+
+  static final List<GetPage<dynamic>> _publicPages = <GetPage<dynamic>>[
+    _page(AppRoutes.splash, () => const SplashView()),
+    _page(
+      AppRoutes.login,
+      () => const LoginView(),
+      binding: AuthBinding(),
+    ),
+    _page(
+      AppRoutes.forgotPassword,
+      () => const ForgotPasswordView(),
+      binding: AuthBinding(),
+    ),
+    _page(
+      AppRoutes.resetPassword,
+      () => const ResetPasswordView(),
+      binding: AuthBinding(),
+    ),
+    _page(
+      AppRoutes.forbidden,
+      () => const ForbiddenView(),
+      middlewares: _auth,
+    ),
+  ];
+
+  // ------------------------------------------------------------ overview
+
+  static final List<GetPage<dynamic>> _overviewPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.dashboard,
+      () => const DashboardView(),
+      binding: DashboardBinding(),
+      middlewares: _auth,
+    ),
+    _page(
+      AppRoutes.settings,
+      () => const SettingsView(),
+      binding: BindingsBuilder(ShowroomBinding().dependencies),
+      middlewares: _auth,
+    ),
+  ];
+
+  // ------------------------------------------------------ administration
+
+  static final List<GetPage<dynamic>> _administrationPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.showrooms,
+      () => const ShowroomListView(),
+      binding: ShowroomBinding(),
+      middlewares: _guard(Permissions.showroomView),
+    ),
+    _page(
+      AppRoutes.showroomForm,
+      () => const ShowroomFormView(),
+      binding: ShowroomBinding(),
+      middlewares: _guard(Permissions.showroomView),
+    ),
+    _page(
+      AppRoutes.showroomDetails,
+      () => const ShowroomDetailsView(),
+      binding: ShowroomBinding(),
+      middlewares: _guard(Permissions.showroomView),
+    ),
+    _page(
+      AppRoutes.users,
+      () => const UsersView(),
+      binding: UsersBinding(),
+      middlewares: _guard(Permissions.usersView),
+    ),
+    _page(
+      AppRoutes.userForm,
+      () => const UserFormView(),
+      binding: UsersBinding(),
+      middlewares: _guard(Permissions.usersView),
+    ),
+    _page(
+      AppRoutes.userDetails,
+      () => const UserFormView(),
+      binding: UsersBinding(),
+      middlewares: _guard(Permissions.usersView),
+    ),
+    _pending(AppRoutes.roles, 'Roles & Permissions'),
+    _pending(AppRoutes.rolePermissions, 'Role Permissions'),
+  ];
+
+  // ------------------------------------------------------------- catalog
+
+  static final List<GetPage<dynamic>> _catalogPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.products,
+      () => const ProductListView(),
+      binding: ProductBinding(),
+      middlewares: _guard(Permissions.productsView),
+    ),
+    _page(
+      AppRoutes.productForm,
+      () => const ProductFormView(),
+      binding: ProductBinding(),
+      middlewares: _guard(Permissions.productsView),
+    ),
+    _page(
+      AppRoutes.productDetails,
+      () => const ProductDetailsView(),
+      binding: ProductBinding(),
+      middlewares: _guard(Permissions.productsView),
+    ),
+    _page(
+      AppRoutes.inventory,
+      () => const InventoryListView(),
+      binding: InventoryBinding(),
+      middlewares: _guard(Permissions.inventoryView),
+    ),
+    _page(
+      AppRoutes.inventoryDetails,
+      () => const InventoryDetailsView(),
+      binding: InventoryBinding(),
+      middlewares: _guard(Permissions.inventoryView),
+    ),
+    _page(
+      AppRoutes.stockIn,
+      () => const StockInView(),
+      binding: InventoryBinding(),
+      middlewares: _guard(Permissions.inventoryCreate),
+    ),
+    _page(
+      AppRoutes.stockTransfer,
+      () => const StockTransferView(),
+      binding: InventoryBinding(),
+      middlewares: _guard(Permissions.inventoryTransfer),
+    ),
+    _page(
+      AppRoutes.stockAdjust,
+      () => const StockAdjustView(),
+      binding: InventoryBinding(),
+      middlewares: _guard(Permissions.inventoryAdjust),
+    ),
+    _page(
+      AppRoutes.purchases,
+      () => const PurchaseListView(),
+      binding: PurchaseBinding(),
+      middlewares: _guard(Permissions.purchasesView),
+    ),
+    _page(
+      AppRoutes.purchaseForm,
+      () => const PurchaseFormView(),
+      binding: PurchaseBinding(),
+      middlewares: _guard(Permissions.purchasesView),
+    ),
+    _page(
+      AppRoutes.purchaseDetails,
+      () => const PurchaseDetailsView(),
+      binding: PurchaseBinding(),
+      middlewares: _guard(Permissions.purchasesView),
+    ),
+    _page(
+      AppRoutes.suppliers,
+      () => const SupplierListView(),
+      binding: PurchaseBinding(),
+      middlewares: _guard(Permissions.purchasesView),
+    ),
+    _page(
+      AppRoutes.supplierForm,
+      () => const SupplierFormView(),
+      binding: PurchaseBinding(),
+      middlewares: _guard(Permissions.purchasesView),
+    ),
+  ];
+
+  // ----------------------------------------------------------- customers
+
+  static final List<GetPage<dynamic>> _customerPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.customers,
+      () => const CustomerListView(),
+      binding: CustomerBinding(),
+      middlewares: _guard(Permissions.customersView),
+    ),
+    _page(
+      AppRoutes.customerForm,
+      () => const CustomerFormView(),
+      binding: CustomerBinding(),
+      middlewares: _guard(Permissions.customersView),
+    ),
+    _page(
+      AppRoutes.customerDetails,
+      () => const CustomerDetailsView(),
+      binding: CustomerBinding(),
+      middlewares: _guard(Permissions.customersView),
+    ),
+    _page(
+      AppRoutes.vehicleDetails,
+      () => const VehicleDetailsView(),
+      binding: CustomerBinding(),
+      middlewares: _guard(Permissions.customersView),
+    ),
+    _pending(AppRoutes.vehicleForm, 'Vehicle'),
+  ];
+
+  // --------------------------------------------------------------- sales
+
+  static final List<GetPage<dynamic>> _salesPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.sales,
+      () => const SaleListView(),
+      binding: SaleBinding(),
+      middlewares: _guard(Permissions.salesView),
+    ),
+    _page(
+      AppRoutes.saleForm,
+      () => const SaleFormView(),
+      binding: SaleBinding(),
+      middlewares: _guard(Permissions.salesCreate),
+    ),
+    _page(
+      AppRoutes.saleDetails,
+      () => const SaleDetailsView(),
+      binding: SaleBinding(),
+      middlewares: _guard(Permissions.salesView),
+    ),
+    _page(
+      AppRoutes.billing,
+      () => const InvoiceListView(),
+      binding: InvoiceBinding(),
+      middlewares: _guard(Permissions.billingView),
+    ),
+    _page(
+      AppRoutes.invoiceDetails,
+      () => const InvoiceDetailsView(),
+      binding: InvoiceBinding(),
+      middlewares: _guard(Permissions.billingView),
+    ),
+    _pending(AppRoutes.invoiceForm, 'Invoice'),
+    _page(
+      AppRoutes.payments,
+      () => const PaymentListView(),
+      binding: PaymentBinding(),
+      middlewares: _guard(Permissions.paymentsView),
+    ),
+    _page(
+      AppRoutes.paymentForm,
+      () => const PaymentFormView(),
+      binding: PaymentBinding(),
+      middlewares: _guard(Permissions.paymentsCreate),
+    ),
+    _page(
+      AppRoutes.paymentDetails,
+      () => const PaymentDetailsView(),
+      binding: PaymentBinding(),
+      middlewares: _guard(Permissions.paymentsView),
+    ),
+  ];
+
+  // ------------------------------------------------------------- finance
+
+  static final List<GetPage<dynamic>> _financePages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.finance,
+      () => const LoanListView(),
+      binding: LoanBinding(),
+      middlewares: _guard(Permissions.financeView),
+    ),
+    _page(
+      AppRoutes.loans,
+      () => const LoanListView(),
+      binding: LoanBinding(),
+      middlewares: _guard(Permissions.financeView),
+    ),
+    _page(
+      AppRoutes.loanDetails,
+      () => const LoanDetailsView(),
+      binding: LoanBinding(),
+      middlewares: _guard(Permissions.financeView),
+    ),
+    _pending(AppRoutes.financeCompanyForm, 'Finance Company'),
+    _pending(AppRoutes.loanForm, 'Loan'),
+    _page(
+      AppRoutes.emi,
+      () => const LoanListView(),
+      binding: LoanBinding(),
+      middlewares: _guard(Permissions.emiView),
+    ),
+    _pending(AppRoutes.emiSchedule, 'EMI Schedule'),
+    _pending(AppRoutes.emiPayment, 'EMI Payment'),
+    _page(
+      AppRoutes.expenses,
+      () => const ExpenseListView(),
+      binding: ExpenseBinding(),
+      middlewares: _guard(Permissions.expensesView),
+    ),
+    _page(
+      AppRoutes.expenseForm,
+      () => const ExpenseFormView(),
+      binding: ExpenseBinding(),
+      middlewares: _guard(Permissions.expensesCreate),
+    ),
+    _page(
+      AppRoutes.expenseDetails,
+      () => const ExpenseDetailsView(),
+      binding: ExpenseBinding(),
+      middlewares: _guard(Permissions.expensesView),
+    ),
+    _page(
+      AppRoutes.accounting,
+      () => const AccountListView(),
+      binding: AccountingBinding(),
+      middlewares: _guard(Permissions.accountingView),
+    ),
+    _page(
+      AppRoutes.accountForm,
+      () => const AccountFormView(),
+      binding: AccountingBinding(),
+      middlewares: _guard(Permissions.accountingView),
+    ),
+    _page(
+      AppRoutes.accountingManualEntry,
+      () => const ManualEntryView(),
+      binding: AccountingBinding(),
+      middlewares: _guard(Permissions.accountingView),
+    ),
+    _page(
+      AppRoutes.accountingTransactions,
+      () => const JournalListView(),
+      binding: AccountingBinding(),
+      middlewares: _guard(Permissions.accountingView),
+    ),
+    _page(
+      AppRoutes.accountingTransactionDetails,
+      () => const JournalDetailsView(),
+      binding: AccountingBinding(),
+      middlewares: _guard(Permissions.accountingView),
+    ),
+  ];
+
+  // ---------------------------------------------------------- operations
+
+  static final List<GetPage<dynamic>> _operationsPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.reminders,
+      () => const ReminderListView(),
+      binding: ReminderBinding(),
+      middlewares: _guard(Permissions.remindersView),
+    ),
+    _page(
+      AppRoutes.remindersForm,
+      () => const ReminderFormView(),
+      binding: ReminderBinding(),
+      middlewares: _guard(Permissions.remindersView),
+    ),
+    _page(
+      AppRoutes.notifications,
+      () => const NotificationListView(),
+      middlewares: _auth,
+    ),
+    _page(
+      AppRoutes.documents,
+      () => const DocumentListView(),
+      binding: DocumentBinding(),
+      middlewares: _guard(Permissions.documentsView),
+    ),
+    _page(
+      AppRoutes.audit,
+      () => const AuditLogView(),
+      binding: DocumentBinding(),
+      middlewares: _guard(Permissions.auditView),
+    ),
+  ];
+
+  // --------------------------------------------------------- after sales
+
+  static final List<GetPage<dynamic>> _afterSalesPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.service,
+      () => const ServiceListView(),
+      binding: ServiceBinding(),
+      middlewares: _guard(Permissions.serviceView),
+    ),
+    _page(
+      AppRoutes.serviceForm,
+      () => const ServiceFormView(),
+      binding: ServiceBinding(),
+      middlewares: _guard(Permissions.serviceCreate),
+    ),
+    _page(
+      AppRoutes.serviceDetails,
+      () => const ServiceDetailsView(),
+      binding: ServiceBinding(),
+      middlewares: _guard(Permissions.serviceView),
+    ),
+    _page(
+      AppRoutes.freeService,
+      () => const FreeServiceView(),
+      binding: FreeServiceBinding(),
+      middlewares: _guard(Permissions.serviceView),
+    ),
+    _pending(AppRoutes.freeServicePlans, 'Free Service Plans'),
+    _page(
+      AppRoutes.warranty,
+      () => const WarrantyListView(),
+      binding: WarrantyBinding(),
+      middlewares: _guard(Permissions.warrantyView),
+    ),
+    _page(
+      AppRoutes.warrantyDetails,
+      () => const WarrantyDetailsView(),
+      binding: WarrantyBinding(),
+      middlewares: _guard(Permissions.warrantyView),
+    ),
+    _page(
+      AppRoutes.insurance,
+      () => const InsuranceListView(),
+      binding: InsuranceBinding(),
+      middlewares: _guard(Permissions.insuranceView),
+    ),
+    _page(
+      AppRoutes.insuranceForm,
+      () => const InsuranceFormView(),
+      binding: InsuranceBinding(),
+      middlewares: _guard(Permissions.insuranceView),
+    ),
+    _page(
+      AppRoutes.insuranceDetails,
+      () => const InsuranceDetailsView(),
+      binding: InsuranceBinding(),
+      middlewares: _guard(Permissions.insuranceView),
+    ),
+  ];
+
+  // ------------------------------------------------------------- insights
+
+  static final List<GetPage<dynamic>> _insightPages = <GetPage<dynamic>>[
+    _page(
+      AppRoutes.reports,
+      () => const ReportCatalogView(),
+      binding: ReportBinding(),
+      middlewares: _guard(Permissions.reportsView),
+    ),
+    _page(
+      AppRoutes.report,
+      () => const ReportView(),
+      binding: ReportBinding(),
+      middlewares: _guard(Permissions.reportsView),
+    ),
+  ];
 }

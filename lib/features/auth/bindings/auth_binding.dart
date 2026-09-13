@@ -1,19 +1,24 @@
+import 'package:enterprise_bike_showroom/features/auth/controllers/auth_controller.dart';
+import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:get/get.dart';
 
-import 'package:enterprise_bike_showroom/features/auth/controllers/auth_controller.dart';
-import 'package:enterprise_bike_showroom/services/auth_service.dart';
-
-/// Registers the auth form controller.
+/// Registers the auth module's form controller.
 ///
-/// `AuthService` itself is a permanent singleton created by `AppBootstrap`
-/// (the session stream must outlive individual routes), so this binding only
-/// wires the per-screen form state.
+/// [SessionController] is global (registered by `InitialBinding`) because the
+/// app shell, route guards and every permission check depend on it.
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AuthController>(
-      () => AuthController(Get.find<AuthService>()),
-      fenix: true,
-    );
+    if (!Get.isRegistered<AuthController>()) {
+      Get.lazyPut<AuthController>(
+        () => AuthController(Get.find()),
+        fenix: true,
+      );
+    }
+    if (!Get.isRegistered<SessionController>()) {
+      throw StateError(
+        'SessionController must be registered before the auth routes are used.',
+      );
+    }
   }
 }

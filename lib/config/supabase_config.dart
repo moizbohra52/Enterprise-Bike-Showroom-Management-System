@@ -18,6 +18,37 @@ class SupabaseConfig {
   /// Realtime realtime channel (single public channel in this project).
   static const String realtimeChannel = 'public';
 
+  /// Storage buckets. Sensitive document buckets are PRIVATE; only
+  /// product-images is public (display only, download still restricted
+  /// client-side per showroom policy).
+  class StorageBuckets {
+    StorageBuckets._();
+
+    static const String productImages = 'product-images';
+    static const String customerDocuments = 'customer-documents';
+    static const String vehicleDocuments = 'vehicle-documents';
+    static const String invoiceDocuments = 'invoice-documents';
+    static const String serviceDocuments = 'service-documents';
+    static const String insuranceDocuments = 'insurance-documents';
+    static const String warrantyDocuments = 'warranty-documents';
+    static const String expenseAttachments = 'expense-attachments';
+
+    /// All buckets, used by storage policy verification and admin tooling.
+    static const List<String> all = <String>[
+      productImages,
+      customerDocuments,
+      vehicleDocuments,
+      invoiceDocuments,
+      serviceDocuments,
+      insuranceDocuments,
+      warrantyDocuments,
+      expenseAttachments,
+    ];
+
+    /// Buckets that may expose public read URLs.
+    static const List<String> publicRead = <String>[productImages];
+  }
+
   /// Whether a bucket is publicly readable.
   static bool isPublicBucket(String bucket) =>
       StorageBuckets.publicRead.contains(bucket);
@@ -30,35 +61,4 @@ class SupabaseConfig {
   }) {
     return '$collection/$entityId/$fileName';
   }
-}
-
-/// Storage buckets. Sensitive document buckets are PRIVATE; only
-/// product-images is public (display only, download still restricted
-/// client-side per showroom policy).
-class StorageBuckets {
-  StorageBuckets._();
-
-  static const String productImages = 'product-images';
-  static const String customerDocuments = 'customer-documents';
-  static const String vehicleDocuments = 'vehicle-documents';
-  static const String invoiceDocuments = 'invoice-documents';
-  static const String serviceDocuments = 'service-documents';
-  static const String insuranceDocuments = 'insurance-documents';
-  static const String warrantyDocuments = 'warranty-documents';
-  static const String expenseAttachments = 'expense-attachments';
-
-  /// All buckets, used by storage policy verification and admin tooling.
-  static const List<String> all = <String>[
-    productImages,
-    customerDocuments,
-    vehicleDocuments,
-    invoiceDocuments,
-    serviceDocuments,
-    insuranceDocuments,
-    warrantyDocuments,
-    expenseAttachments,
-  ];
-
-  /// Buckets that may expose public read URLs.
-  static const List<String> publicRead = <String>[productImages];
 }

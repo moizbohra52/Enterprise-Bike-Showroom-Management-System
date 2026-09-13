@@ -27,18 +27,16 @@ class _AccountFormViewState extends State<AccountFormView> {
 
   @override
   Widget build(BuildContext context) {
-    final RxBool saving = _saving;
-
     return AppShell(
       title: 'New Account',
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Create Account',
             icon: Icons.save_outlined,
-            isLoading: saving,
-            onPressed: saving ? null : _submit,
+            isLoading: _saving.value,
+            onPressed: _saving.value ? null : _submit,
           ),
         ),
       ],
@@ -125,5 +123,4 @@ class _AccountFormViewState extends State<AccountFormView> {
       _saving.value = false;
     }
   }
-}
 }

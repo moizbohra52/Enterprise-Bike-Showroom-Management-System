@@ -30,7 +30,7 @@ class DocumentListView extends GetView<AttachmentController> {
       title: 'Documents',
       actions: <Widget>[
         const AppPermissionView(
-          permission: Permissions.documentsCreate,
+          permission: Permissions.documentsUpload,
           child: AppButton(
             label: 'Upload',
             icon: Icons.upload_file_outlined,
@@ -269,7 +269,7 @@ class _UploadSheetState extends State<_UploadSheet> {
     try {
       final File file = File(path);
       final String storagePath = await controller.imageService.uploadDocument(
-        bucket: StorageBuckets.customerDocuments,
+        bucket: SupabaseConfig.StorageBuckets.customerDocuments,
         collection: _entityType,
         entityId: _entityId.text.trim(),
         file: file,
