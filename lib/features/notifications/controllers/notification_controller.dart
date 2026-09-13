@@ -27,7 +27,7 @@ class NotificationController extends GetxController {
   final RxInt unreadCount = 0.obs;
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxBool isLoading = false.obs;
-  final Rx<PageInfo> pageInfo = const Rx<PageInfo>(PageInfo.empty());
+  final Rx<PageInfo> pageInfo = Rx<PageInfo>(PageInfo.empty());
 
   Timer? _badgeTimer;
 
@@ -96,7 +96,8 @@ class NotificationController extends GetxController {
         (NotificationModel n) => n.id == id);
     if (index >= 0 && !notifications[index].isRead) {
       notifications[index] = notifications[index].copyWith(isRead: true);
-      unreadCount.value = (unreadCount.value - 1).clamp(0, 1 << 31);
+      final int remaining = unreadCount.value - 1;
+      unreadCount.value = remaining < 0 ? 0 : remaining;
     }
     try {
       await repository.markRead(id);
@@ -132,18 +133,25 @@ class NotificationController extends GetxController {
     switch (type) {
       case 'sale':
         Get.toNamed('${AppRoutes.saleDetails}/${notification.referenceId}');
+        break;
       case 'invoice':
         Get.toNamed('${AppRoutes.invoiceDetails}/${notification.referenceId}');
+        break;
       case 'payment':
         Get.toNamed('${AppRoutes.paymentDetails}/${notification.referenceId}');
+        break;
       case 'service':
         Get.toNamed('${AppRoutes.serviceDetails}/${notification.referenceId}');
+        break;
       case 'customer':
         Get.toNamed('${AppRoutes.customerDetails}/${notification.referenceId}');
+        break;
       case 'loan':
         Get.toNamed('${AppRoutes.loanDetails}/${notification.referenceId}');
+        break;
       case 'reminder':
         Get.toNamed(AppRoutes.reminders);
+        break;
       default:
         break;
     }

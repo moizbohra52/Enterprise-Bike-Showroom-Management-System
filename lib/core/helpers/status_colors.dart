@@ -43,7 +43,6 @@ class StatusColors {
     'cancelled': const Color(0xFFDC2626),
     'canceled': const Color(0xFFDC2626),
     'overdue': const Color(0xFFB91C1C),
-    'overdue': const Color(0xFFB91C1C),
     'defaulted': const Color(0xFFB91C1C),
     'rejected': const Color(0xFFDC2626),
     'failed': const Color(0xFFDC2626),

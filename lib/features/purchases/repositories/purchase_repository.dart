@@ -196,7 +196,7 @@ class PurchaseRepository {
     try {
       final dynamic row = await supabase.rpc(
           'create_purchase_transaction',
-          <String, dynamic>{
+          params: <String, dynamic>{
             'supplier_id': supplierId,
             'showroom_id': showroomId,
             'order_date':
@@ -221,7 +221,7 @@ class PurchaseRepository {
   Future<void> receive(String purchaseId,
       {Map<String, dynamic>? chassisByLine}) async {
     try {
-      await supabase.rpc('receive_purchase', <String, dynamic>{
+      await supabase.rpc('receive_purchase', params: <String, dynamic>{
         'p_purchase_id': purchaseId,
         'p_received_date': DateTime.now().toIso8601String(),
         if (chassisByLine != null) 'p_chassis_numbers': chassisByLine,
@@ -239,7 +239,7 @@ class PurchaseRepository {
     String? referenceNumber,
   }) async {
     try {
-      await supabase.rpc('pay_supplier', <String, dynamic>{
+      await supabase.rpc('pay_supplier', params: <String, dynamic>{
         'p_purchase_id': purchaseId,
         'p_amount': amount,
         'p_payment_mode': paymentMode,

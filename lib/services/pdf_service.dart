@@ -453,9 +453,9 @@ class PdfService {
   /// Prints the PDF using the platform print dialog.
   Future<void> printPdf(Uint8List bytes, {required String filename}) async {
     try {
-      await Printing().print(
-        data: PdfFile(bytes),
-        filename: filename,
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: filename,
       );
     } catch (e) {
       AppLogger.error('PDF', 'print failed', error: e);

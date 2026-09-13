@@ -130,7 +130,7 @@ class ExpenseRepository {
     try {
       final dynamic row = await supabase.rpc(
           'create_expense_transaction',
-          <String, dynamic>{
+          params: <String, dynamic>{
             'category_id': categoryId,
             'showroom_id': showroomId,
             'description': description,
@@ -153,7 +153,7 @@ class ExpenseRepository {
 
   Future<ExpenseModel> approve(String id, String approvedBy) async {
     try {
-      final dynamic row = await supabase.rpc('approve_expense', <String, dynamic>{
+      final dynamic row = await supabase.rpc('approve_expense', params: <String, dynamic>{
         'p_expense_id': id,
         'p_approved_by': approvedBy,
       });
@@ -169,7 +169,7 @@ class ExpenseRepository {
   Future<ExpenseModel> reject(
       String id, String rejectedBy, String reason) async {
     try {
-      final dynamic row = await supabase.rpc('reject_expense', <String, dynamic>{
+      final dynamic row = await supabase.rpc('reject_expense', params: <String, dynamic>{
         'p_expense_id': id,
         'p_rejected_by': rejectedBy,
         'p_reason': reason,

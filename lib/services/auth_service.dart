@@ -28,10 +28,10 @@ class AuthService {
   Stream<AuthState> get authChanges => _authChanges.stream;
 
   /// Current session (null when signed out).
-  AuthSession? get currentSession => client.auth.currentSession;
+  Session? get currentSession => client.auth.currentSession;
 
   /// Currently authenticated user (null when signed out).
-  AuthUser? get currentUser => client.auth.currentSession?.user;
+  User? get currentUser => client.auth.currentUser;
 
   /// Auth user id (for RLS/audit).
   String? get currentUserId => currentUser?.id;
@@ -49,14 +49,14 @@ class AuthService {
     _subscription = client.auth.onAuthStateChange.listen((AuthState state) {
       AppLogger.info(
         'AUTH',
-        'state: ${state.eventName}, user: ${state.session?.user?.id ?? '-'}',
+        'state: ${state.event.name}, user: ${state.session?.user?.id ?? '-'}',
       );
       _authChanges.add(state);
     });
   }
 
   /// Signs in with email + password.
-  Future<AuthUser> signIn({
+  Future<User> signIn({
     required String email,
     required String password,
   }) async {
@@ -65,7 +65,7 @@ class AuthService {
         email: email.trim().toLowerCase(),
         password: password,
       );
-      final AuthUser? user = response.data.user;
+      final User? user = response.user;
       if (user == null) {
         throw AppAuthException('Sign in failed. Please try again.');
       }
@@ -79,10 +79,10 @@ class AuthService {
   }
 
   /// Creates an account (email confirmation may be required by the project).
-  Future<AuthUser> signUp({
+  Future<User> signUp({
     required String email,
     required String password,
-    Map<String, String>? data,
+    Map<String, dynamic>? data,
   }) async {
     try {
       final AuthResponse response = await client.auth.signUp(
@@ -90,7 +90,7 @@ class AuthService {
         password: password,
         data: data,
       );
-      final AuthUser? user = response.data.user;
+      final User? user = response.user;
       if (user == null) {
         throw AppAuthException('Sign up failed. Please try again.');
       }

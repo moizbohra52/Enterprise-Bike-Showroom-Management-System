@@ -55,7 +55,7 @@ class BaseListController<T> extends GetxController {
   final RxList<T> items = <T>[].obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
-  final Rx<PageInfo> pageInfo = const Rx<PageInfo>(PageInfo.empty());
+  final Rx<PageInfo> pageInfo = Rx<PageInfo>(PageInfo.empty());
   final RxBool hasMore = false.obs;
 
   /// Active debounced search text (bound to AppSearchField).

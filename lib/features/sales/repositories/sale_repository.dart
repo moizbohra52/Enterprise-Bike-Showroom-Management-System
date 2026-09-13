@@ -121,12 +121,12 @@ class SaleRepository {
       if (delivery != null) 'delivery': delivery,
     };
     final dynamic saleRow =
-        await supabase.rpc('create_sale_transaction', salePayload);
+        await supabase.rpc('create_sale_transaction', params: salePayload);
     final String saleId =
         saleRow is Map ? SafeJson.asId(saleRow['id']) : (saleRow?.toString() ?? '');
 
     // Invoice (server computes tax; returns the invoice row).
-    final dynamic invoice = await supabase.rpc('create_invoice', <String, dynamic>{
+    final dynamic invoice = await supabase.rpc('create_invoice', params: <String, dynamic>{
       'p_sale_id': saleId,
       'p_invoice_date': saleDate?.toIso8601String() ??
           DateTime.now().toIso8601String(),
@@ -138,7 +138,7 @@ class SaleRepository {
 
     // First payment (down payment for EMI, full for cash).
     if (firstPayment > 0) {
-      await supabase.rpc('record_payment', <String, dynamic>{
+      await supabase.rpc('record_payment', params: <String, dynamic>{
         'p_invoice_id': invoice is Map ? SafeJson.asId(invoice['id']) : '',
         'p_amount': firstPayment,
         'p_payment_mode': firstPaymentMode,
@@ -158,7 +158,7 @@ class SaleRepository {
 
   /// Cancels a sale (un-delivered only) through the transactional RPC.
   Future<void> cancel(String saleId, String reason) async {
-    await supabase.rpc('cancel_sale', <String, dynamic>{
+    await supabase.rpc('cancel_sale', params: <String, dynamic>{
       'p_sale_id': saleId,
       'p_reason': reason,
     });

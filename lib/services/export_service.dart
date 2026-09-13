@@ -25,7 +25,7 @@ class ExportService {
       columns,
       ...rows,
     ];
-    return const CSV().toCsv(all);
+    return Csv().encode(all);
   }
 
   /// Builds an Excel workbook (first sheet named [sheetName]).
@@ -38,21 +38,26 @@ class ExportService {
     final Sheet sheet = excel[sheetName.length > 31
         ? sheetName.substring(0, 31)
         : sheetName];
-    sheet.appendRow(<Cell>[
-      for (final String column in columns)
-        Cell(cellValue: AnyCellData(column)),
+    sheet.appendRow(<CellValue>[
+      for (final String column in columns) TextCellValue(column),
     ]);
     for (final List<dynamic> row in rows) {
-      sheet.appendRow(<Cell>[
-        for (final dynamic value in row)
-          Cell(
-            cellValue: value is num
-                ? AnyCellData(value)
-                : AnyCellData(value?.toString() ?? ''),
-          ),
+      sheet.appendRow(<CellValue>[
+        for (final dynamic value in row) _cellValue(value),
       ]);
     }
-    return await excel.save();
+    final List<int>? data = excel.encode();
+    return Uint8List.fromList(data ?? <int>[]);
+  }
+
+  /// Maps an arbitrary export value to an [excel] [CellValue].
+  CellValue _cellValue(dynamic value) {
+    if (value == null) return TextCellValue('');
+    if (value is bool) return BoolCellValue(value);
+    if (value is int) return IntCellValue(value);
+    if (value is num) return DoubleCellValue(value.toDouble());
+    if (value is DateTime) return TextCellValue(value.toIso8601String());
+    return TextCellValue(value.toString());
   }
 
   /// Saves CSV to the documents directory and returns the path.

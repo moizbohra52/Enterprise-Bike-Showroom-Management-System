@@ -133,7 +133,7 @@ class SaleModel extends BaseModel {
       saleType: SafeJson.asText(json['sale_type'], fallback: 'retail'),
       status: SafeJson.asText(json['status'], fallback: 'completed'),
       paymentMode: SafeJson.asText(json['payment_mode'], fallback: 'cash'),
-      emi: SafeJson.asBool(json['is_emi']),
+      emi: SafeJson.asBoolOr(json['is_emi'], false),
       subtotal: SafeJson.asMoney(json['subtotal_amount']),
       discountAmount: SafeJson.asMoney(json['discount_amount']),
       taxAmount: SafeJson.asMoney(json['tax_amount']),
