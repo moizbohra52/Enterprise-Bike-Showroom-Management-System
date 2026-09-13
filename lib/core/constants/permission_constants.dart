@@ -51,6 +51,7 @@ class PermissionActions {
   static const String bill = 'bill';
   static const String payment = 'payment';
   static const String discount = 'discount';
+  static const String upload = 'upload';
 }
 
 /// Builds and validates permission strings.

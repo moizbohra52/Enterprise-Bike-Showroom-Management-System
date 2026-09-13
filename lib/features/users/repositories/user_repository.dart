@@ -72,6 +72,9 @@ class UserRepository {
     ];
   }
 
+  /// Role ids currently assigned to [userId].
+  Future<List<String>> roleIdsFor(String userId) => _roleIdsFor(userId);
+
   Future<List<String>> _roleIdsFor(String userId) async {
     final dynamic rows = await supabase
         .table('user_roles')
