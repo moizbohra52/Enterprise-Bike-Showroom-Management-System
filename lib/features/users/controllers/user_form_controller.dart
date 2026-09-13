@@ -9,7 +9,7 @@ import 'package:enterprise_bike_showroom/features/users/repositories/user_reposi
 import 'package:enterprise_bike_showroom/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthUser;
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 /// Create / edit form for application users.
 ///
@@ -127,7 +127,7 @@ class UserFormController extends GetxController {
         );
         await repository.setRoles(userId.value, selectedRoleIds.toList());
       } else {
-        final AuthUser authUser = await authService.signUp(
+        final User authUser = await authService.signUp(
           email: emailController.text.trim(),
           password: passwordController.text,
           data: <String, String>{'name': nameController.text.trim()},

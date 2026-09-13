@@ -26,7 +26,7 @@ class UsersController extends GetxController {
   final RxList<UserModel> items = <UserModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
-  final Rx<PageInfo> pageInfo = const Rx<PageInfo>(PageInfo.empty());
+  final Rx<PageInfo> pageInfo = Rx<PageInfo>(PageInfo.empty());
 
   /// Debounced search text (bound to `AppSearchField`).
   final RxString search = ''.obs;

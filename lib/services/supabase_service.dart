@@ -21,7 +21,7 @@ class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
 
   /// Table query builder shortcut: `from('customers')`.
-  QueryBuilder table(String table) => client.from(table);
+  SupabaseQueryBuilder table(String table) => client.from(table);
 
   /// Realtime channel helper.
   RealtimeChannel channel(String name) => client.realtime.channel(name);
@@ -95,13 +95,13 @@ class SupabaseService {
 }
 
 /// Extension making `select` count usage explicit and consistent.
-extension SupabaseQueryX on QueryBuilder {
+extension SupabaseQueryX on SupabaseQueryBuilder {
   /// Builds `select('*', count: exact)` for paginated reads.
-  QueryBuilder withExactCount([String select = '*']) {
+  PostgrestFilterBuilder withExactCount([String select = '*']) {
     return select2(select, count: CountOption.exact);
   }
 
-  QueryBuilder select2(String select, {CountOption? count}) {
-    return this.select(select, count: count ?? CountOption.exact);
+  PostgrestFilterBuilder select2(String select, {CountOption? count}) {
+    return select(select, count: count ?? CountOption.exact);
   }
 }

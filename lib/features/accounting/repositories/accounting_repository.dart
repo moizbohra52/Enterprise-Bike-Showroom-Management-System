@@ -144,7 +144,7 @@ class AccountingRepository {
     try {
       final dynamic row = await supabase.rpc(
           'create_accounting_transaction',
-          <String, dynamic>{
+          params: <String, dynamic>{
             'showroom_id': showroomId,
             'entry_date': entryDate.toIso8601String(),
             'narration': narration,
@@ -167,7 +167,7 @@ class AccountingRepository {
   Future<List<Map<String, dynamic>>> accountLedger(
       String accountId, {int limit = 500}) async {
     try {
-      final dynamic rows = await supabase.rpc('account_ledger', <String, dynamic>{
+      final dynamic rows = await supabase.rpc('account_ledger', params: <String, dynamic>{
         'p_account_id': accountId,
         'p_limit': limit,
       });

@@ -77,8 +77,9 @@ class PageInfo {
   final int pageSize;
   final int total;
 
-  int get totalPages =>
-      pageSize <= 0 ? 0 : (total / pageSize).ceil().clamp(1, 1 << 31);
+  int get totalPages => pageSize <= 0
+      ? 0
+      : (total / pageSize).ceil().clamp(1, 1 << 31).toInt();
 
   bool get hasNext => page < totalPages;
 

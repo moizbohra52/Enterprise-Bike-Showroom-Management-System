@@ -27,7 +27,10 @@ class SyncQueueEntry {
   final String entityType;
 
   /// Local or server id of the affected entity.
-  final String entityId;
+  ///
+  /// Mutable: `LocalDatabaseService.completeOperation` replaces the local id
+  /// with the server id after a successful create.
+  String entityId;
 
   /// What to do once online.
   final SyncOperation operation;
@@ -40,19 +43,29 @@ class SyncQueueEntry {
 
   /// Server `updated_at` captured when the operation was created; used for
   /// conflict detection.
-  final String? revision;
+  ///
+  /// Mutable: updated by `completeOperation` / `markConflict`.
+  String? revision;
 
   /// How many sync attempts failed so far.
-  final int retryCount;
+  ///
+  /// Mutable: incremented by `LocalDatabaseService.failOperation`.
+  int retryCount;
 
   /// Last error message (null when healthy).
-  final String? lastError;
+  ///
+  /// Mutable: cleared/set by the queue lifecycle methods.
+  String? lastError;
 
   /// Queue status.
-  final SyncStatus status;
+  ///
+  /// Mutable: advanced by the queue lifecycle methods.
+  SyncStatus status;
 
   /// True when server and local versions diverged; resolution is required.
-  final bool conflict;
+  ///
+  /// Mutable: toggled by the queue lifecycle methods.
+  bool conflict;
 
   SyncQueueEntry copyWith({
     String? id,
@@ -75,7 +88,7 @@ class SyncQueueEntry {
       createdAt: createdAt ?? this.createdAt,
       revision: revision ?? this.revision,
       retryCount: retryCount ?? this.retryCount,
-      lastError: lastError,
+      lastError: lastError ?? this.lastError,
       status: status ?? this.status,
       conflict: conflict ?? this.conflict,
     );

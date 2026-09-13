@@ -25,7 +25,7 @@ class DateUtils {
   /// `yyyy-MM-dd` (ISO date, safe for query params).
   static String isoDate(DateTime? date) {
     if (date == null) return '';
-    return date.toIso8601String().split(' ').first;
+    return DateFormat('yyyy-MM-dd').format(date);
   }
 
   /// `yyyy-MM`.

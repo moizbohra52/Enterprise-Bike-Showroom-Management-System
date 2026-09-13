@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_core/firebase_core.dart' show FirebaseApp;
+import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -39,18 +40,16 @@ class NotificationService {
   /// The last fetched FCM token (null on web / when unavailable).
   String? get currentToken => _currentToken;
 
-  bool get supported => defaultTargetPlatform != defaultTargetPlatformValue.web
-      ? true
-      : FirebasePlatform.isAvailable;
+  bool get supported => !kIsWeb;
 
   /// Platform name stored with the token.
   String get platformName {
     switch (defaultTargetPlatform) {
-      case defaultTargetPlatformValue.android:
+      case TargetPlatform.android:
         return 'android';
-      case defaultTargetPlatformValue.iOS:
+      case TargetPlatform.iOS:
         return 'ios';
-      case defaultTargetPlatformValue.windows:
+      case TargetPlatform.windows:
         return 'windows';
       default:
         return 'web';
@@ -59,7 +58,7 @@ class NotificationService {
 
   /// Initializes messaging listeners (safe no-op where FCM is unavailable).
   Future<void> init() async {
-    if (!Firebase.appExists('default')) {
+    if (Firebase.apps.isEmpty) {
       AppLogger.warning('FCM', 'Firebase not initialized; push disabled');
       return;
     }
@@ -70,8 +69,6 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      messaging.onIosActivate.listen(_onOpened);
-      messaging.onIosRefresh.listen((_) {});
       _foregroundSub = messaging.onMessage.listen(_onForeground);
       _openedSub = messaging.onMessageOpenedApp.listen(_onOpened);
       AppLogger.info('FCM', 'initialized');
@@ -181,13 +178,13 @@ class NotificationService {
     try {
       final DeviceInfoPlugin info = DeviceInfoPlugin();
       switch (defaultTargetPlatform) {
-        case defaultTargetPlatformValue.android:
+        case TargetPlatform.android:
           final AndroidDeviceInfo d = await info.androidInfo;
           return '${d.brand} ${d.model}';
-        case defaultTargetPlatformValue.iOS:
+        case TargetPlatform.iOS:
           final IosDeviceInfo d = await info.iosInfo;
           return '${d.name} ${d.model}';
-        case defaultTargetPlatformValue.windows:
+        case TargetPlatform.windows:
           final WindowsDeviceInfo d = await info.windowsInfo;
           return 'Windows ${d.releaseId}';
         default:

@@ -175,10 +175,13 @@ class DashboardController extends GetxController {
         switch (dateOp) {
           case _DateOp.eq:
             builder = builder.eq(entry.key, entry.value);
+            break;
           case _DateOp.gte:
             builder = builder.gte(entry.key, entry.value);
+            break;
           case _DateOp.lte:
             builder = builder.lte(entry.key, entry.value);
+            break;
         }
         continue;
       }

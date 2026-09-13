@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -89,11 +90,13 @@ class ErrorMapper {
       case 401:
         return UnauthorizedException();
       case 403:
-        return ForbiddenException(message ?? null);
+        return message == null
+            ? ForbiddenException()
+            : ForbiddenException(message);
       case 404:
-        return NotFoundException(message ?? null);
+        return message == null ? NotFoundException() : NotFoundException(message);
       case 409:
-        return ConflictException(message ?? null);
+        return message == null ? ConflictException() : ConflictException(message);
       case 422:
         return ValidationException(message ?? 'Validation failed.');
       case 429:

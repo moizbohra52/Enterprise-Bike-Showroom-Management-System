@@ -85,7 +85,7 @@ class ServiceRepository {
     DateTime? serviceDate,
   }) async {
     try {
-      final dynamic row = await supabase.rpc('open_service_job', <String, dynamic>{
+      final dynamic row = await supabase.rpc('open_service_job', params: <String, dynamic>{
         'p_vehicle_id': vehicleId,
         'p_customer_id': customerId,
         'p_showroom_id': showroomId,
@@ -117,7 +117,7 @@ class ServiceRepository {
     String paymentMode = 'cash',
   }) async {
     try {
-      final dynamic row = await supabase.rpc('complete_service', <String, dynamic>{
+      final dynamic row = await supabase.rpc('complete_service', params: <String, dynamic>{
         'p_service_id': serviceId,
         'p_odometer_out': odometerOut,
         'p_work_done': workDone,

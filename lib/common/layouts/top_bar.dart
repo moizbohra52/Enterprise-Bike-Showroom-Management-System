@@ -211,10 +211,13 @@ class _ProfileMenu extends StatelessWidget {
         switch (value) {
           case 'profile':
             Get.toNamed(AppRoutes.settings);
+            break;
           case 'settings':
             Get.toNamed(AppRoutes.settings);
+            break;
           case 'logout':
             _confirmLogout(context);
+            break;
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[

@@ -168,6 +168,7 @@ class ReportView extends GetView<ReportViewController> {
             columns: d.columns,
             rows: rows,
           );
+          break;
         case 'pdf':
           path = await export.savePdfReport(
             fileName: '$safeName.pdf',
@@ -175,12 +176,14 @@ class ReportView extends GetView<ReportViewController> {
             columns: d.columns,
             rows: rows,
           );
+          break;
         default:
           path = await export.saveCsv(
             fileName: '$safeName.csv',
             columns: d.columns,
             rows: rows,
           );
+          break;
       }
       AppSnackbar.success(context, 'Saved to $path');
       await export.openFile(path);
