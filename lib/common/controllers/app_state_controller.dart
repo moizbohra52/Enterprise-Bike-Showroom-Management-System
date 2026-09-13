@@ -63,7 +63,7 @@ class AppStateController extends GetxController {
 
   /// Sets + persists a custom accent (MaterialColor seed).
   Future<void> setAccent(MaterialColor accent) async {
-    _applyAccent(accent);
+    _applyAccent(accent.value);
     await prefs.setInt(StorageKeys.accentColor, accent.value);
   }
 

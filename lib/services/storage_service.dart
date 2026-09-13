@@ -35,7 +35,6 @@ class StorageService {
             path,
             bytes,
             fileOptions: FileOptions(upsert: upsert),
-            onUploadProgress: onProgress,
           );
       AppLogger.info('STORAGE', 'uploaded $bucket/$path');
       return path;
@@ -65,7 +64,7 @@ class StorageService {
 
   /// Public URL (only valid for public-read buckets).
   String getPublicUrl({required String bucket, required String path}) {
-    return client.storage.from(bucket).getPublicUrl(path).data;
+    return client.storage.from(bucket).getPublicUrl(path);
   }
 
   /// Signed URL for private files (default 1 hour).
@@ -77,7 +76,7 @@ class StorageService {
     try {
       final String url = await client.storage
           .from(bucket)
-          .createSignedUrl(path, expiresIn: expiresIn);
+          .createSignedUrl(path, expiresIn);
       return url;
     } catch (e) {
       throw ErrorMapper.map(e);
@@ -142,14 +141,15 @@ class StorageService {
   }
 
   /// Lists objects under a folder prefix.
-  Future<List<FileApi>> listFiles({
+  Future<List<FileObject>> listFiles({
     required String bucket,
     String folder = '',
   }) async {
     try {
-      return await client.storage
-          .from(bucket)
-          .list(folder, SearchOptions(limit: 200));
+      return await client.storage.from(bucket).list(
+            path: folder,
+            searchOptions: SearchOptions(limit: 200),
+          );
     } catch (e) {
       throw ErrorMapper.map(e);
     }

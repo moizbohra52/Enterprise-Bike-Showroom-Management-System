@@ -87,7 +87,7 @@ class PaymentRepository {
     String? notes,
   }) async {
     try {
-      final dynamic row = await supabase.rpc('record_payment', <String, dynamic>{
+      final dynamic row = await supabase.rpc('record_payment', params: <String, dynamic>{
         'p_invoice_id': invoiceId,
         'p_amount': amount,
         'p_payment_mode': paymentMode,
@@ -111,7 +111,7 @@ class PaymentRepository {
   Future<void> refund(String paymentId, String reason,
       {String? referenceNumber}) async {
     try {
-      await supabase.rpc('refund_payment', <String, dynamic>{
+      await supabase.rpc('refund_payment', params: <String, dynamic>{
         'p_payment_id': paymentId,
         'p_reason': reason,
         'p_reference_number': referenceNumber,

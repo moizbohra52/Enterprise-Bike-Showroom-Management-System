@@ -90,7 +90,7 @@ class LoanRepository {
     String? notes,
   }) async {
     try {
-      final dynamic row = await supabase.rpc('pay_emi', <String, dynamic>{
+      final dynamic row = await supabase.rpc('pay_emi', params: <String, dynamic>{
         'p_loan_id': loanId,
         'p_installment_no': installmentNo,
         'p_payment_mode': paymentMode,

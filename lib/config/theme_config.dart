@@ -173,7 +173,7 @@ class AppTheme {
   }) {
     final bool dark = brightness == Brightness.dark;
     final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: accent?.primary ?? AppColors.primary,
+      seedColor: accent ?? AppColors.primary,
       brightness: brightness,
     );
 

@@ -52,8 +52,7 @@ class LoggingInterceptor extends Interceptor {
     if (enabled) {
       AppLogger.debug(
         'HTTP',
-        '← ${response.statusCode} ${response.requestOptions.uri.path} '
-            '(${response.realTime?.inMilliseconds}ms)',
+        '← ${response.statusCode} ${response.requestOptions.uri.path}',
       );
     }
     super.onResponse(response, handler);

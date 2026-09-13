@@ -58,23 +58,32 @@ class GlobalSearchController extends GetxController {
     switch (result.entityType) {
       case 'customer':
         Get.toNamed('${AppRoutes.customerDetails}/${result.id}');
+        break;
       case 'customer_vehicle':
       case 'vehicle':
         Get.toNamed('${AppRoutes.vehicleDetails}/${result.id}');
+        break;
       case 'inventory':
         Get.toNamed('${AppRoutes.inventoryDetails}/${result.id}');
+        break;
       case 'product':
         Get.toNamed('${AppRoutes.productDetails}/${result.id}');
+        break;
       case 'sale':
         Get.toNamed('${AppRoutes.saleDetails}/${result.id}');
+        break;
       case 'invoice':
         Get.toNamed('${AppRoutes.invoiceDetails}/${result.id}');
+        break;
       case 'payment':
         Get.toNamed('${AppRoutes.paymentDetails}/${result.id}');
+        break;
       case 'loan':
         Get.toNamed('${AppRoutes.loanDetails}/${result.id}');
+        break;
       case 'service':
         Get.toNamed('${AppRoutes.serviceDetails}/${result.id}');
+        break;
       default:
         break;
     }

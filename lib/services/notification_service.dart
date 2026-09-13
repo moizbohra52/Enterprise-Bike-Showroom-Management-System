@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart' show Firebase;
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -40,7 +39,7 @@ class NotificationService {
   /// The last fetched FCM token (null on web / when unavailable).
   String? get currentToken => _currentToken;
 
-  /// Push is only available on builds that have a Firebase configuration.
+  /// Push is only available on builds that carry a Firebase configuration.
   bool get supported => !kIsWeb;
 
   /// Platform name stored with the token.
@@ -74,6 +73,7 @@ class NotificationService {
         badge: true,
         sound: true,
       );
+      // Cold start: the notification the app was launched from.
       final RemoteMessage? launch = await messaging.getInitialMessage();
       if (launch != null) _onOpened(launch);
       _foregroundSub = messaging.onMessage.listen(_onForeground);

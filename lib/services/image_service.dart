@@ -45,7 +45,7 @@ class ImageService {
         );
       }
       final Uint8List encoded =
-          img.encodeJpg(resized, quality: quality.clamp(1, 100));
+          img.encodeJpg(resized, quality: quality.clamp(1, 100).toInt());
       final File out = File(
         '${Directory.systemTemp.path}/img_${IdGenerator.uuid()}.jpg',
       );

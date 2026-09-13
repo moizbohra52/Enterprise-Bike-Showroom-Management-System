@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
-    show AuthEvent, AuthState;
+    show AuthChangeEvent, AuthState;
 
 import 'package:enterprise_bike_showroom/common/controllers/app_state_controller.dart';
 import 'package:enterprise_bike_showroom/common/models/role_model.dart';
@@ -109,25 +109,35 @@ class SessionController extends GetxController {
   }
 
   Future<void> _onAuthStateChanged(AuthState state) async {
-    switch (state.eventName) {
-      case AuthEvent.signedIn:
-        // Push registration must never block the profile load.
+    switch (state.event) {
+      case AuthChangeEvent.signedIn:
+        // Push registration must never block the profile load: registerToken
+        // rethrows when `device_tokens` is missing or RLS rejects the insert.
         try {
           await notificationService?.registerToken(
             userId: state.session?.user?.id ?? '',
           );
         } catch (e) {
-          AppLogger.warning('SESSION', 'push token registration failed',
-              error: e);
+          AppLogger.warning(
+            'SESSION',
+            'push token registration failed',
+            error: e,
+          );
         }
         await _loadProfile();
-      case AuthEvent.signedOut:
+        break;
+      case AuthChangeEvent.signedOut:
         await _clearSession();
-      case AuthEvent.tokenRefreshed:
-      case AuthEvent.initialSession:
+        break;
+      case AuthChangeEvent.tokenRefreshed:
+      case AuthChangeEvent.initialSession:
         // No profile reload needed; tokens rotate transparently.
-      case AuthEvent.userUpdated:
+        break;
+      case AuthChangeEvent.userUpdated:
         await _loadProfile();
+        break;
+      default:
+        break;
     }
   }
 

@@ -202,7 +202,7 @@ class ReportRepository {
       } else {
         rows = await supabase.rpc(
             definition.source,
-            <String, dynamic>{...(params ?? const <String, dynamic>{})});
+            params: <String, dynamic>{...(params ?? const <String, dynamic>{})});
       }
       return <Map<String, dynamic>>[
         for (final dynamic row in SafeJson.asList(rows))
