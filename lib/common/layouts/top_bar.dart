@@ -147,7 +147,7 @@ class TopBarActions extends StatelessWidget {
   }
 
   void _openSearch(BuildContext context, String initial) {
-    final SearchController search = Get.find<SearchController>();
+    final GlobalSearchController search = Get.find<GlobalSearchController>();
     search.openWith(initial);
   }
 }

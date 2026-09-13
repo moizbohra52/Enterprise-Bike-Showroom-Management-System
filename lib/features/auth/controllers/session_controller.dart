@@ -111,9 +111,15 @@ class SessionController extends GetxController {
   Future<void> _onAuthStateChanged(AuthState state) async {
     switch (state.eventName) {
       case AuthEvent.signedIn:
-        await notificationService?.registerToken(
-          userId: state.session?.user?.id ?? '',
-        );
+        // Push registration must never block the profile load.
+        try {
+          await notificationService?.registerToken(
+            userId: state.session?.user?.id ?? '',
+          );
+        } catch (e) {
+          AppLogger.warning('SESSION', 'push token registration failed',
+              error: e);
+        }
         await _loadProfile();
       case AuthEvent.signedOut:
         await _clearSession();

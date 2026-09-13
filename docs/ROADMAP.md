@@ -1,75 +1,81 @@
-# Roadmap — what is wired, what is still open
+# Engineering notes — state of the app layer
 
-Audited: 2026-09-12 (after the app bootstrap landed).
+Audited on 2026-09-12, against `main` after PR #2 (`runnable app layer +
+Supabase migrations`).
 
-## Now wired (runnable)
+## Fixed here
 
-| Piece | File |
-| --- | --- |
-| Entry point (prefs → Hive → Supabase → Firebase → global DI) | `lib/main.dart`, `lib/routes/app_bootstrap.dart` |
-| Root widget (theme, locale, routing) | `lib/app.dart` |
-| Route table: 49 pages, module bindings, `:id?` params | `lib/routes/app_pages.dart` |
-| Session + permission gate for protected pages | `lib/common/routing/route_guard.dart` |
-| Splash / login / forgot password / reset password | `lib/features/auth/views/*` |
-| Dashboard (KPIs, revenue trend, recent sales, follow-ups) | `lib/features/dashboard/*` |
-| Global search screen (top-bar search) | `lib/features/search/views/global_search_view.dart` |
-| Forbidden / unknown-route fallbacks | `lib/features/auth/views/forbidden_view.dart`, `lib/common/views/not_found_view.dart` |
+1. **Nested classes (Dart does not allow them).**
+   * `SupabaseConfig` contained `class StorageBuckets` → hoisted to a
+     top-level `StorageBuckets`; the three `SupabaseConfig.StorageBuckets.*`
+     call sites (`image_service`, `document_list_view`, `expense_form_view`)
+     updated.
+   * `ProductFormView` contained `class FileRef` → hoisted as
+     `_ProductImageRef`.
+   Both were hard compile errors, so `lib/` did not compile before this.
+2. **`NotificationService` used APIs that do not exist**:
+   `defaultTargetPlatformValue.*`, `FirebasePlatform.isAvailable`,
+   `Firebase.appExists(...)`, `messaging.onIosActivate` / `onIosRefresh`.
+   Replaced with `kIsWeb` + `TargetPlatform.*`, `Firebase.apps.isEmpty` and
+   `getInitialMessage()`. The unused `dart:io` import was dropped (it breaks
+   `flutter_build_web`-style web compiles).
+3. **`SearchController` name clash** with Flutter's own `SearchController`
+   (`material.dart`), which made the reference in `TopBar` ambiguous → the app
+   class is now `GlobalSearchController` (controller, `top_bar`,
+   `initial_binding`).
+4. **Missing global registrations.** `PdfService`, `ExportService` and
+   `ImageService` are `Get.find`-ed from the invoice/payment/service views,
+   the report screen and the upload sheets, but `InitialBinding` never
+   registered them → those screens threw at open time. Registered permanently
+   in `lib/routes/initial_binding.dart`.
+5. **Offline customer writes never replayed.** `CustomerController` enqueues
+   `customer` operations, but only a `user` handler was registered, so every
+   queued customer write ended up as
+   `"No sync handler registered."` conflicts. `CustomerRepository` is now
+   registered globally and wired as the `customer` handler (`EntityType.*`
+   constants used instead of string literals).
+6. **Push-token failure could abort the sign-in flow** — `registerToken`
+   rethrows on any `device_tokens` error (missing table, RLS), which used to
+   bubble out of the auth-state listener and skip `_loadProfile()`. Now
+   logged and ignored, so a broken FCM setup cannot lock a user out.
 
-Bootstrap registers every cross-cutting singleton that `Get.find` is called on
-anywhere in the app (`SupabaseService`, `LocalDatabaseService`,
-`ConnectivityService`, `AuthService`, `ApiService`, `PdfService`,
-`ImageService`, `StorageService`, `ExportService`, `NotificationService`,
-`AppStateController`, `SyncService`, `SyncStateController`, `UserRepository`,
-`SessionController`, `GlobalSearchController`, `NotificationController`) and
-registers the offline sync handlers for the five entity types whose
-repositories implement `applySyncOp` (showroom, user, product, inventory,
-customer).
+## Known gaps (next PRs)
 
-## Compile blockers fixed in the same pass
+* **Boot assumes a Supabase client.** `InitialBinding` calls `AuthService.init()`
+  and `session.bootstrap()`; `main()` swallows a `Supabase.initialize` failure.
+  If initialization ever fails (malformed URL, blocked network at startup),
+  the binding throws and the app dies before the first frame. A
+  `EnvironmentConfig.backendReady` flag (set in `main`) plus an early return in
+  `AuthService.init()` would make the placeholder path airtight.
+* **Accent colour changes need a restart.** `AppStateController.lightTheme` /
+  `darkTheme` are plain fields, while `main.dart` only watches `themeMode` and
+  `language` — Settings > Appearance > accent therefore applies after a
+  restart. Making the two themes `Rx<ThemeData>` (and reading `.value` in
+  `main.dart`) fixes it without touching the rest of the state.
+* **Dashboard aggregation is client-side.** KPIs count rows exactly but sum
+  money over a bounded 1000-row window (`_sumWindow`); busy showrooms will
+  under-report. Replace with a `dashboard_summary(p_showroom_id, p_from, p_to)`
+  SQL function in a migration and keep the controller shape unchanged.
+* **Web build.** `ImageService` and `ExportService` import `dart:io` for
+  `File`; on web those need `kIsWeb` branches or conditional imports.
+* **Sync coverage.** `ShowroomRepository`, `ProductRepository` and
+  `InventoryRepository` already implement `applySyncOp`, but no flow enqueues
+  those entity types yet — handlers should be registered together with the
+  first offline draft screen for each module.
+* **No tests.** `mocktail` and `integration_test` are declared but there is no
+  `test/` directory. Highest value first: `SessionController.can` / permission
+  matrix, `SyncService` queue + conflict paths, `EmiCalculator`, and a widget
+  smoke test that boots `AppPages.pages` with a mocked `SupabaseService`.
+* **Push notifications** additionally need per-platform Firebase config and the
+  `device_tokens` table (see `supabase/migrations`) before
+  `NotificationService.registerToken` stores anything.
 
-* `SupabaseConfig` declared a nested `class StorageBuckets` (illegal in Dart) —
-  hoisted to top level; call sites use `StorageBuckets.*`.
-* `ProductFormView` declared a nested `class FileRef` — hoisted as
-  `_ProductImageRef`.
-* `NotificationService` used non-existent `defaultTargetPlatformValue.*`,
-  `FirebasePlatform.isAvailable`, `Firebase.appExists` and
-  `messaging.onIosActivate/onIosRefresh` — rewritten with `kIsWeb`,
-  `TargetPlatform.*`, `Firebase.apps.isEmpty`, `getInitialMessage`.
-* `SessionController` fed a raw `Stream<AuthState>` into GetX `ever` — now a
-  plain subscription; push-token registration can no longer abort profile load.
-* The app's `SearchController` clashed with Flutter's `SearchController`
-  (ambiguous import in `top_bar.dart`) — renamed to `GlobalSearchController`.
-* `AppStateController.lightTheme/darkTheme` are now `Rx<ThemeData>` so accent
-  changes from Settings repaint the app.
-* `AuthController` gained `resetPassword()` and disposes its text editing
-  controllers in `onClose`.
+## Verification done for this PR
 
-## Still open (next PRs)
-
-1. **Unwired routes.** `AppRoutes` declares pages whose views do not exist yet,
-   so these menu entries have no page (GetX shows the unknown-route screen):
-   `users` (list/form/details), `roles` (+ `rolePermissions`), `vehicleForm`,
-   `invoiceForm`, `financeCompanyForm`, `loanForm`, `emi` (dashboard/schedule/
-   payment), `freeServicePlans`. `UserRepository` already exposes everything the
-   user/role screens need (`list`, `createProfile`, `update`, `deactivate`,
-   `setRoles`, `listRoles`, `listPermissions`, `setRolePermissions`), so they are
-   mostly view work.
-2. **Dashboard aggregation.** `DashboardRepository` counts/sums client-side over
-   capped (1000-row) scans. Replace with a `dashboard_summary(p_showroom_id,
-   p_from, p_to)` SQL function when the schema PR lands; the snapshot shape in
-   `DashboardRepository` is already what the view consumes.
-3. **Password-reset deep link.** `ResetPasswordView` expects the recovery
-   session created by the Supabase redirect. Add `app_links`/deep-link handling
-   to consume `#access_token` (web) and the universal link (iOS/Android).
-4. **Backend artefacts are not in this repo.** Supabase migrations/RLS/RPCs
-   (`create_sale_transaction`, `record_payment`, `pay_emi`, `open_service_job`,
-   `ensure_showroom_accounts`, …) and `google-services.json` /
-   `GoogleService-Info.plist` must be supplied per environment; without a
-   Firebase config, push stays disabled by design (`NotificationService` logs
-   and no-ops).
-5. **Tests.** `test/` does not exist; `mocktail` is already a dev dependency.
-   Highest-value first: `AuthController` + `SessionController` (permission
-   matrix), `SyncService` (queue/conflict), `EmiCalculator`, `AppMenu.visibleFor`.
-6. **Web build.** `dart:io` is still imported by `ImageService`/`ExportService`
-   (`File`), so `flutter build web` needs those paths guarded (`kIsWeb`) or
-   moved behind conditional imports.
+No Dart/Flutter SDK is available in the environment used for these changes, so
+`flutter analyze` / `flutter test` were **not** run. Checks performed instead:
+every `import` path resolves; every referenced project symbol is declared in
+the file that imports it; `Get.find<T>()` / `GetView<T>` targets are all
+registered by either `InitialBinding` or a module binding; nested class
+declarations and the non-existent Firebase/`defaultTargetPlatform` APIs are
+gone. A `flutter analyze` on a real toolchain should be the first CI step.
