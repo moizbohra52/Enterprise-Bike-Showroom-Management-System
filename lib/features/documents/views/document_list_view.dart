@@ -30,7 +30,7 @@ class DocumentListView extends GetView<AttachmentController> {
       title: 'Documents',
       actions: <Widget>[
         const AppPermissionView(
-          permission: Permissions.documentsCreate,
+          permission: Permissions.documentsUpload,
           child: AppButton(
             label: 'Upload',
             icon: Icons.upload_file_outlined,
