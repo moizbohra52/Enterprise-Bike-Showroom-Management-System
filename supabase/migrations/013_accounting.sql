@@ -1,315 +1,310 @@
--- 013_accounting.sql
--- Double-entry ledger: chart of accounts, balanced journal entries and the
--- three RPCs the app calls (ensure_showroom_accounts,
--- create_accounting_transaction, account_ledger).
+-- =============================================================================
+-- 013_accounting.sql  (SS24, SS67, SS82)
+-- -----------------------------------------------------------------------------
+-- Behaviour on top of the accounting tables created in 004:
+--   * the balanced-journal invariant as a DEFERRED constraint trigger, so a
+--     multi-line journal may exist unbalanced mid-statement but can never be
+--     committed that way
+--   * per-showroom chart of accounts, seeded automatically for every new branch
+--   * the public create/reverse RPCs the Flutter client is allowed to call
+--   * parameterised report functions (trial balance, ledger, P&L) that beat
+--     the views on large data sets because they filter before aggregating
+-- =============================================================================
 
-create table if not exists public.accounts (
-  id            uuid primary key default public.new_id(),
-  showroom_id   uuid references public.showrooms (id) on delete cascade,
-  code          text not null,
-  name          text not null,
-  type          text not null
-                  check (type in ('asset', 'liability', 'equity', 'income',
-                                  'expense')),
-  sub_type      text not null default '',
-  parent_id     uuid references public.accounts (id) on delete set null,
-  is_system     boolean not null default false,
-  status        text not null default 'active'
-                  check (status in ('active', 'inactive')),
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now(),
-  -- Spec naming kept as generated aliases for reports/views.
-  account_code  text generated always as (code) stored,
-  account_name  text generated always as (name) stored,
-  unique (code, showroom_id)
-);
-
--- Table names follow the Flutter models (JournalEntryModel reads
--- `journal_entry_id`; AccountingRepository queries `journal_entries`).
-create table if not exists public.journal_entries (
-  id             uuid primary key default public.new_id(),
-  showroom_id    uuid not null references public.showrooms (id),
-  entry_number   text not null unique,
-  entry_date     date not null default current_date,
-  narration      text not null default '',
-  source_module  text not null default 'manual',
-  source_id      uuid,
-  total_debit    numeric(14,2) not null default 0,
-  total_credit   numeric(14,2) not null default 0,
-  status         text not null default 'posted'
-                   check (status in ('draft', 'posted', 'reversed')),
-  created_by     uuid references public.users (id) on delete set null,
-  created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now(),
-  check (total_debit = total_credit)
-);
-
-create table if not exists public.journal_lines (
-  id                uuid primary key default public.new_id(),
-  journal_entry_id  uuid not null
-                      references public.journal_entries (id)
-                      on delete cascade,
-  account_id        uuid not null references public.accounts (id),
-  side              text not null check (side in ('debit', 'credit')),
-  amount            numeric(14,2) not null check (amount >= 0),
-  notes             text not null default '',
-  created_at        timestamptz not null default now()
-);
-
--- Spec naming (docs/SPECIFICATION.md section 46) kept as views so reports
--- written against accounting_transactions / accounting_entries keep working.
-create or replace view public.accounting_transactions as
-select * from public.journal_entries;
-
-create or replace view public.accounting_entries as
-select id,
-       journal_entry_id as transaction_id,
-       account_id,
-       side,
-       amount,
-       notes as description,
-       created_at
-  from public.journal_lines;
-
-create index if not exists journal_lines_entry_idx
-  on public.journal_lines (journal_entry_id);
-create index if not exists journal_lines_account_idx
-  on public.journal_lines (account_id);
-create index if not exists journal_entries_showroom_date_idx
-  on public.journal_entries (showroom_id, entry_date desc);
-
-alter table public.accounts enable row level security;
-alter table public.journal_entries enable row level security;
-alter table public.journal_lines enable row level security;
-
-drop policy if exists accounts_select on public.accounts;
-create policy accounts_select on public.accounts
-  for select to authenticated
-  using (showroom_id is null or public.can_access_showroom(showroom_id));
-
-drop policy if exists accounts_write on public.accounts;
-create policy accounts_write on public.accounts
-  for all to authenticated
-  using (public.has_permission('accounting', 'edit'))
-  with check (public.has_permission('accounting', 'create'));
-
-drop policy if exists journal_entries_tenant on public.journal_entries;
-create policy journal_entries_tenant on public.journal_entries
-  for all to authenticated
-  using (public.can_access_showroom(showroom_id))
-  with check (public.can_access_showroom(showroom_id));
-
-drop policy if exists journal_lines_all on public.journal_lines;
-create policy journal_lines_all on public.journal_lines
-  for all to authenticated
-  using (exists (
-           select 1 from public.journal_entries t
-            where t.id = journal_entry_id
-              and public.can_access_showroom(t.showroom_id)))
-  with check (exists (
-           select 1 from public.journal_entries t
-            where t.id = journal_entry_id
-              and public.can_access_showroom(t.showroom_id)));
-
--- Default chart of accounts for a showroom (spec section 82).
-create or replace function public.ensure_showroom_accounts(p_showroom_id uuid)
-returns integer
+-- ---------------------------------------------------------------------------
+-- 1. Debit == Credit, enforced at commit
+-- ---------------------------------------------------------------------------
+create or replace function app_acc.assert_journal_balanced()
+returns trigger
 language plpgsql
-volatile
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
-  created integer := 0;
-  rows_added integer;
-  tmpl record;
+  v_d numeric;
+  v_c numeric;
+  v_number text;
 begin
-  if not public.can_access_showroom(p_showroom_id) then
-    raise exception 'FORBIDDEN: no access to showroom' using errcode = '42501';
+  select t.transaction_number, round(coalesce(sum(e.debit),0),2), round(coalesce(sum(e.credit),0),2)
+    into v_number, v_d, v_c
+    from public.accounting_transactions t
+    join public.accounting_entries e on e.transaction_id = t.id
+   where t.id = coalesce(new.transaction_id, old.transaction_id)
+   group by t.transaction_number;
+
+  if v_number is null then
+    return null;   -- the journal was deleted entirely: append-only guard blocks that
   end if;
 
-  for tmpl in
-    select * from (values
-      ('1000', 'Cash',               'asset',     'current'),
-      ('1010', 'Bank',               'asset',     'current'),
-      ('1100', 'Customer Receivable','asset',     'receivable'),
-      ('1200', 'Inventory',          'asset',     'inventory'),
-      ('2000', 'Supplier Payable',   'liability', 'payable'),
-      ('2100', 'Tax Payable',        'liability', 'tax'),
-      ('2200', 'Loan Payable',       'liability', 'loan'),
-      ('3000', 'Owner Equity',       'equity',    'capital'),
-      ('4000', 'Sales Revenue',      'income',    'sales'),
-      ('4100', 'Service Revenue',    'income',    'service'),
-      ('4200', 'Interest Income',    'income',    'other'),
-      ('5000', 'Purchase',           'expense',   'cogs'),
-      ('5100', 'Discount',           'expense',   'discount'),
-      ('5200', 'Salary Expense',     'expense',   'salary'),
-      ('5300', 'Rent Expense',       'expense',   'rent'),
-      ('5400', 'Marketing Expense',  'expense',   'marketing'),
-      ('5900', 'Other Expense',      'expense',   'other')
-    ) as t(code, name, type, sub_type)
-  loop
-    insert into public.accounts
-      (showroom_id, code, name, type, sub_type, is_system)
-    values
-      (p_showroom_id, tmpl.code, tmpl.name, tmpl.type, tmpl.sub_type, true)
-    on conflict (code, showroom_id) do nothing;
-    get diagnostics rows_added = row_count;
-    created := created + rows_added;
-  end loop;
-
-  return created;
+  if v_d is distinct from v_c then
+    raise exception '[VAL010] journal % is unbalanced: debit % vs credit % - the transaction is rolled back',
+      v_number, v_d, v_c using errcode = '23514';
+  end if;
+  if v_d = 0 then
+    raise exception '[VAL011] journal % has no value', v_number using errcode = '23514';
+  end if;
+  return null;
 end;
 $$;
 
--- Posts a balanced journal entry. `lines` is
--- [{account_id, side, amount, notes}, ...] (JournalLineModel.toJson()).
-create or replace function public.create_accounting_transaction(
-  showroom_id uuid,
-  lines jsonb,
-  entry_date date default current_date,
-  narration text default '',
-  source_module text default 'manual',
-  source_id uuid default null
-)
-returns jsonb
+drop trigger if exists trg_journal_balanced on public.accounting_entries;
+create constraint trigger trg_journal_balanced
+  after insert or update or delete on public.accounting_entries
+  deferrable initially deferred
+  for each row execute function app_acc.assert_journal_balanced();
+
+-- A journal cannot be committed while its reversal state contradicts its lines
+create or replace function app_acc.assert_journal_shape()
+returns trigger
 language plpgsql
-volatile
 security definer
-set search_path = public
+set search_path = ''
 as $$
-declare
-  txn_id     uuid;
-  line       jsonb;
-  total_debit  numeric := 0;
-  total_credit numeric := 0;
-  amount     numeric;
-  side       text;
 begin
-  if not public.can_access_showroom(showroom_id) then
-    raise exception 'FORBIDDEN: no access to showroom' using errcode = '42501';
+  if new.reference_id is null or new.reference_type is null then
+    raise exception '[VAL012] every journal must point at a business document (SS69)'
+      using errcode = '22000';
   end if;
-  if not public.has_permission('accounting', 'create') then
-    raise exception 'FORBIDDEN: accounting.create required' using errcode = '42501';
+  if exists (select 1 from public.accounts a
+              where a.id in (select e.account_id from public.accounting_entries e
+                              where e.transaction_id = new.id)
+                and a.showroom_id <> new.showroom_id) then
+    raise exception '[VAL013] journal % mixes accounts from another showroom', new.transaction_number
+      using errcode = '23514';
   end if;
-  if lines is null or jsonb_array_length(lines) < 2 then
-    raise exception 'VALIDATION: a journal entry needs at least two lines'
-      using errcode = '22023';
-  end if;
-
-  for line in select * from jsonb_array_elements(lines) loop
-    side := lower(coalesce(line ->> 'side', ''));
-    amount := coalesce((line ->> 'amount')::numeric, 0);
-    if side not in ('debit', 'credit') or amount <= 0 then
-      raise exception 'VALIDATION: every line needs a side and a positive amount'
-        using errcode = '22023';
-    end if;
-    if side = 'debit' then
-      total_debit := total_debit + amount;
-    else
-      total_credit := total_credit + amount;
-    end if;
-  end loop;
-
-  if total_debit <> total_credit then
-    raise exception 'VALIDATION: entry is unbalanced (% debit vs % credit)',
-                    total_debit, total_credit
-      using errcode = '22023';
-  end if;
-
-  insert into public.journal_entries
-    (showroom_id, entry_number, entry_date, narration, source_module,
-     source_id, total_debit, total_credit, status, created_by)
-  values
-    (showroom_id, public.next_document_number(showroom_id, 'JV'),
-     coalesce(entry_date, current_date), coalesce(narration, ''),
-     coalesce(source_module, 'manual'), source_id,
-     total_debit, total_credit, 'posted', public.current_user_id())
-  returning id into txn_id;
-
-  for line in select * from jsonb_array_elements(lines) loop
-    insert into public.journal_lines
-      (journal_entry_id, account_id, side, amount, notes)
-    values
-      (txn_id,
-       nullif(line ->> 'account_id', '')::uuid,
-       lower(line ->> 'side'),
-       (line ->> 'amount')::numeric,
-       coalesce(line ->> 'notes', ''));
-  end loop;
-
-  return (
-    select jsonb_build_object(
-             'id', t.id,
-             'entry_number', t.entry_number,
-             'entry_date', t.entry_date,
-             'narration', t.narration,
-             'source_module', t.source_module,
-             'status', t.status,
-             'total_debit', t.total_debit,
-             'total_credit', t.total_credit,
-             'journal_lines', coalesce(
-               (select jsonb_agg(
-                         jsonb_build_object('id', e.id,
-                                            'account_id', e.account_id,
-                                            'account_name', a.name,
-                                            'account_code', a.code,
-                                            'side', e.side,
-                                            'amount', e.amount,
-                                            'notes', e.notes)
-                         order by e.created_at)
-                  from public.journal_lines e
-                  join public.accounts a on a.id = e.account_id
-                 where e.journal_entry_id = t.id), '[]'::jsonb)
-           )
-      from public.journal_entries t
-     where t.id = txn_id
-  );
+  return null;
 end;
 $$;
 
--- Account ledger with a running balance.
-create or replace function public.account_ledger(
-  p_account_id uuid,
-  p_limit integer default 100
-)
-returns jsonb
+drop trigger if exists trg_journal_shape on public.accounting_transactions;
+create trigger trg_journal_shape
+  after insert or update on public.accounting_transactions
+  for each row execute function app_acc.assert_journal_shape();
+
+-- ---------------------------------------------------------------------------
+-- 2. Every showroom gets its own chart of accounts (SS82)
+-- ---------------------------------------------------------------------------
+create or replace function app_acc.seed_chart_on_showroom_create()
+returns trigger
 language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform app_acc.ensure_default_chart(new.id);
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_seed_chart on public.showrooms;
+create trigger trg_seed_chart
+  after insert on public.showrooms
+  for each row execute function app_acc.seed_chart_on_showroom_create();
+
+-- Group accounts must not be posted to, and system accounts are not deletable.
+create or replace function app_acc.guard_accounts()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'DELETE' then
+    if old.is_system then
+      raise exception '[CON001] % is a system account and cannot be deleted', old.account_name
+        using errcode = '23514';
+    end if;
+    if exists (select 1 from public.accounting_entries e where e.account_id = old.id) then
+      raise exception '[CON002] account % has postings; archive it instead of deleting it (SS42)',
+        old.account_name using errcode = '23514';
+    end if;
+    return old;
+  end if;
+
+  if new.is_group and not old.is_group
+     and exists (select 1 from public.accounting_entries e where e.account_id = old.id) then
+    raise exception '[CON003] an account with postings cannot become a group' using errcode = '23514';
+  end if;
+  if old.is_system and (new.account_type is distinct from old.account_type
+                        or new.account_code is distinct from old.account_code
+                        or new.status is distinct from old.status) then
+    if not app_sec.is_super_admin() then
+      raise exception '[SEC001] system accounts are read-only for your role' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_guard_accounts on public.accounts;
+create trigger trg_guard_accounts
+  before update or delete on public.accounts
+  for each row execute function app_acc.guard_accounts();
+
+-- ---------------------------------------------------------------------------
+-- 3. Public RPCs (SS50)
+-- ---------------------------------------------------------------------------
+create or replace function public.create_accounting_transaction(p_payload jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_showroom uuid := coalesce((p_payload ->> 'showroom_id')::uuid, app_sec.current_showroom_id());
+  v_date     date := coalesce((p_payload ->> 'transaction_date')::date, current_date);
+  v_type     text := coalesce(nullif(p_payload ->> 'journal_type',''), 'MANUAL');
+  v_lines    jsonb := p_payload -> 'lines';
+  v_id       uuid;
+begin
+
+  perform app_sec.require_permission('accounting','post');
+  perform app_sec.require_showroom_access(v_showroom);
+  -- a hand-written journal is the accountant's power, not everyone's
+
+  if jsonb_typeof(v_lines) <> 'array' or jsonb_array_length(v_lines) < 2 then
+    perform app_util.fail('VAL001', 'a manual journal needs at least two lines');
+  end if;
+
+  v_id := app_acc.post_journal(v_showroom, v_date, v_type,
+             coalesce(nullif(p_payload ->> 'reference_type',''), 'manual'),
+             coalesce((p_payload ->> 'reference_id')::uuid, gen_random_uuid()),
+             coalesce(p_payload ->> 'description', 'Manual journal'),
+             v_lines);
+
+  perform app_util.audit_row('accounting','CREATE','accounting_transactions', v_id, null,
+          jsonb_build_object('payload', p_payload - 'lines'), v_showroom, null,
+          'Manual journal');
+  return v_id;
+end;
+$$;
+
+create or replace function public.reverse_accounting_transaction(
+  p_transaction_id uuid,
+  p_reason text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_new uuid;
+begin
+
+  perform app_sec.require_permission('accounting','reverse');
+  v_new := app_acc.reverse_journal(p_transaction_id, p_reason);
+  return v_new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 4. Report functions (date-range filtered, so they scale past the views)
+-- ---------------------------------------------------------------------------
+create or replace function public.get_trial_balance(
+  p_showroom_id uuid,
+  p_from date default null,
+  p_to   date default null
+)
+returns table (account_code text, account_name text, account_type text,
+               debit numeric, credit numeric, balance numeric)
+language sql
 stable
-security definer
-set search_path = public
+set search_path = ''
 as $$
-declare
-  result jsonb;
-begin
-  if not public.has_permission('accounting', 'view') then
-    raise exception 'FORBIDDEN: accounting.view required' using errcode = '42501';
-  end if;
-
-  select coalesce(jsonb_agg(row_to_json(ledger)), '[]'::jsonb)
-    into result
-    from (
-      select e.id,
-             t.entry_number,
-             t.entry_date,
-             t.narration,
-             e.side,
-             e.amount,
-             sum(case when e.side = 'debit' then e.amount else -e.amount end)
-               over (order by t.entry_date, e.created_at) as balance
-        from public.journal_lines e
-        join public.journal_entries t on t.id = e.journal_entry_id
-       where e.account_id = p_account_id
-         and t.status = 'posted'
-       order by t.entry_date desc, e.created_at desc
-       limit greatest(coalesce(p_limit, 100), 1)
-    ) ledger;
-
-  return result;
-end;
+  select a.account_code::text, a.account_name::text, a.account_type::text,
+         round(coalesce(sum(e.debit), 0), 2),
+         round(coalesce(sum(e.credit), 0), 2),
+         round(coalesce(sum(case when a.normal_balance = 'DEBIT'
+                                 then e.debit - e.credit else e.credit - e.debit end), 0), 2)
+    from public.accounts a
+    -- A period trial balance must actually respect the period: the entry join is
+    -- parenthesised so that the journal state and the dates filter the entries
+    -- themselves, and a reversal counts because the entry it corrects still
+    -- belongs to the books (SS25, SS42).
+    left join (public.accounting_entries e
+               join public.accounting_transactions t on t.id = e.transaction_id
+                    and t.status in ('POSTED','REVERSED')
+                    and (p_from is null or t.transaction_date >= p_from)
+                    and (p_to   is null or t.transaction_date <= p_to))
+           on e.account_id = a.id
+   where a.showroom_id = p_showroom_id and a.is_group = false
+   group by a.id, a.account_code, a.account_name, a.account_type, a.normal_balance
+   order by a.account_code;
 $$;
 
-grant execute on function public.ensure_showroom_accounts(uuid) to authenticated;
-grant execute on function public.create_accounting_transaction(
-  uuid, jsonb, date, text, text, uuid) to authenticated;
-grant execute on function public.account_ledger(uuid, integer) to authenticated;
+create or replace function public.get_account_ledger(
+  p_account_id uuid,
+  p_from date default null,
+  p_to   date default null,
+  p_limit integer default 200,
+  p_offset integer default 0
+)
+returns table (entry_id uuid, transaction_id uuid, transaction_number text,
+               transaction_date date, journal_type text, reference_type text,
+               reference_id uuid, description text, debit numeric, credit numeric,
+               running_balance numeric)
+language sql
+stable
+set search_path = ''
+as $$
+  select e.id, t.id, t.transaction_number::text, t.transaction_date, t.journal_type::text,
+         t.reference_type::text, t.reference_id,
+         coalesce(e.description, t.description)::text, e.debit, e.credit,
+         sum(case when a.normal_balance = 'DEBIT' then e.debit - e.credit
+                  else e.credit - e.debit end)
+          over (order by t.transaction_date, t.id, e.line_number
+                rows between unbounded preceding and current row)
+    from public.accounting_entries e
+    join public.accounting_transactions t on t.id = e.transaction_id
+                              and t.status in ('POSTED','REVERSED')
+    join public.accounts a on a.id = e.account_id
+   where e.account_id = p_account_id
+     and (p_from is null or t.transaction_date >= p_from)
+     and (p_to   is null or t.transaction_date <= p_to)
+   order by t.transaction_date, t.id, e.line_number
+   limit least(greatest(coalesce(p_limit, 200), 1), 1000) offset greatest(coalesce(p_offset, 0), 0);
+$$;
+
+create or replace function public.get_profit_and_loss(
+  p_showroom_id uuid,
+  p_from date default null,
+  p_to   date default null
+)
+returns jsonb
+language sql
+stable
+set search_path = ''
+as $$
+  -- One aggregation pass, then the JSON shape is assembled from it. Keeps the
+  -- P&L report identical to the trial balance by construction (SS24, SS25).
+  with lines as (
+    select a.account_code, a.account_name, a.account_type,
+           round(coalesce(sum(case when a.normal_balance = 'DEBIT'
+                                   then e.debit - e.credit else e.credit - e.debit end), 0), 2) as amount
+      from public.accounts a
+      join public.accounting_entries e      on e.account_id = a.id
+      join public.accounting_transactions t on t.id = e.transaction_id
+                                       and t.status in ('POSTED','REVERSED')
+     where a.showroom_id = p_showroom_id
+       and a.is_group = false
+       and a.account_type in ('INCOME','EXPENSE')
+       and (p_from is null or t.transaction_date >= p_from)
+       and (p_to   is null or t.transaction_date <= p_to)
+     group by a.account_code, a.account_name, a.account_type
+  )
+  select jsonb_build_object(
+    'showroomId',  p_showroom_id,
+    'from',        p_from,
+    'to',          p_to,
+    'income',      coalesce((select jsonb_agg(jsonb_build_object('code', account_code,
+                                                 'name', account_name, 'amount', amount)
+                                                 order by account_code)
+                               from lines where account_type = 'INCOME' and amount <> 0), '[]'::jsonb),
+    'expense',     coalesce((select jsonb_agg(jsonb_build_object('code', account_code,
+                                                 'name', account_name, 'amount', amount)
+                                                 order by account_code)
+                               from lines where account_type = 'EXPENSE' and amount <> 0), '[]'::jsonb),
+    'totalIncome',  round(coalesce((select sum(amount) from lines where account_type = 'INCOME'), 0), 2),
+    'totalExpense', round(coalesce((select sum(amount) from lines where account_type = 'EXPENSE'), 0), 2),
+    'netProfit',    round(coalesce((select sum(amount) from lines where account_type = 'INCOME'), 0)
+                        - coalesce((select sum(amount) from lines where account_type = 'EXPENSE'), 0), 2)
+  );
+$$;

@@ -1,330 +1,338 @@
--- 009_rls.sql
--- Row Level Security. This is the real authorization boundary; the Flutter
--- permission checks are UX only.
+-- =============================================================================
+-- 009_rls.sql  (SS49)
+-- -----------------------------------------------------------------------------
+-- Row Level Security for the whole system.  Policies are generated from a
+-- small declarative config (app_sec.rls_policy_config) instead of 400
+-- hand-written statements:
 --
--- Design:
---   * Tables with showroom_id are gated by public.can_access_showroom().
---   * Child tables are gated through their parent row.
---   * Helper functions are `security definer` and RLS is *not* forced, so
---     those functions (and the audit trigger) never recurse into RLS.
---   * audit_logs has no write policy: rows are only written by the
---     security-definer trigger in 007_triggers.sql.
+--   * the config is the single place to read "who may touch which table"
+--   * re-running 009 is idempotent (drop + create per table)
+--   * every policy is expressed through the SECURITY DEFINER helpers in 006,
+--     which are owned by a superuser role and therefore never re-enter RLS
+--     (the recursion trap called out in SS49)
+--   * financial tables get SELECT/INSERT/UPDATE but deliberately *no* DELETE
+--     policy, and DELETE is additionally revoked at the grant level
+--
+-- Policy shapes
+--   tenant      : row is visible/writable when its showroom is granted to me
+--   parent      : a child line table inherits the scope of its header row
+--   self        : only my own rows (profile, notifications, devices, prefs)
+--   global_read : readable by any authenticated user, written by permission
+--   admin_only  : SUPER ADMIN only, everyone else sees nothing
+--   append_only : readable per scope, insert-only, no update/delete at all
+-- =============================================================================
 
-do $$
+create table if not exists app_sec.rls_policy_config (
+  table_name     text primary key,
+  kind           text not null check (kind in
+                   ('tenant','parent','self','global_read','admin_only','append_only')),
+  module         text,                              -- permission module governing writes
+  select_action  text,          -- null = no SELECT policy (denied to the API)
+  insert_action  text,                              -- null = no INSERT policy
+  update_action  text,                              -- null = no UPDATE policy
+  delete_action  text,                              -- null = no DELETE policy
+  parent_table   text,                              -- for kind = 'parent'
+  parent_fk      text,                              -- FK column on the child
+  scope_column   text,          -- column on THIS table holding the tenant id
+  note           text
+);
+
+comment on table app_sec.rls_policy_config is
+  'Declarative RLS matrix. NULL in *_action means "no policy of that kind exists", which under RLS means "denied".';
+
+insert into app_sec.rls_policy_config
+      (table_name, kind, module, select_action, insert_action, update_action, delete_action, parent_table, parent_fk, scope_column, note)
+values
+  ('showrooms','tenant','showroom','view','create','edit',null,null,null,'id','a showroom is scoped by its own id'),
+  ('users','tenant','users','view','create','edit',null,null,null,'showroom_id','plus users_self_select so a user always reads their own row'),
+  ('user_showroom_access','tenant','users','view','edit','edit',null,null,null,'showroom_id',null),
+  ('user_roles','tenant','roles','view','assign','assign',null,null,null,'showroom_id','showroom_id may be null = group-wide grant; can_access_showroom() handles null'),
+  ('role_permissions','admin_only','roles','view','manage','manage','manage',null,null,null,'the permission matrix itself is SUPER ADMIN only'),
+  ('permissions','global_read','roles','view',null,null,null,null,null,null,null),
+  ('roles','global_read','roles','view','manage','manage',null,null,null,null,null),
+  ('device_tokens','self','users','view','create','edit','delete',null,null,'user_id',null),
+  ('user_preferences','self','settings','view','edit','edit','edit',null,null,'user_id',null),
+  ('saved_filters','self','settings','view','create','edit','delete',null,null,'user_id',null),
+  ('app_settings','global_read','settings','view',null,'edit',null,null,null,null,null),
+  ('brands','global_read','products','view','create','edit','delete',null,null,null,null),
+  ('products','global_read','products','view','create','edit','delete',null,null,null,null),
+  ('product_colors','global_read','products','view','create','edit','delete',null,null,null,null),
+  ('product_images','global_read','products','view','create','edit','delete',null,null,null,null),
+  ('free_service_plans','global_read','service','view','create','edit','delete',null,null,null,null),
+  ('finance_companies','global_read','finance','view','create','edit','delete',null,null,null,null),
+  ('suppliers','global_read','suppliers','view','create','edit','delete',null,null,null,null),
+  ('expense_categories','global_read','expenses','view','create','edit','delete',null,null,null,null),
+  ('inventory','tenant','inventory','view','create','edit',null,null,null,'showroom_id','no physical delete: stock is returned or scrapped, never erased'),
+  ('customers','tenant','customers','view','create','edit',null,null,null,'showroom_id',null),
+  ('customer_vehicles','tenant','vehicles','view','create','edit',null,null,null,'showroom_id',null),
+  ('sales','tenant','sales','view','create','edit',null,null,null,'showroom_id',null),
+  ('sale_items','parent','sales','view','create','edit','delete','sales','sale_id',null,null),
+  ('invoices','tenant','billing','view','create','edit',null,null,null,'showroom_id','amount columns are guarded by trg_guard_invoices_finalized (007)'),
+  ('invoice_items','parent','billing','view','create','edit','delete','invoices','invoice_id',null,null),
+  ('payments','tenant','payments','view','create',null,null,null,null,'showroom_id','money is immutable: INSERT only (plus status flips through RPCs that bypass RLS)'),
+  ('stock_transfers','tenant','inventory','view','transfer','edit',null,null,null,'from_showroom_id','sender creates; receiver updates via receive_stock_transfer()'),
+  ('stock_movements','append_only','inventory','view',null,null,null,null,null,'showroom_id','ledger: readable, never writable from the API'),
+  ('purchases','tenant','purchases','view','create','edit',null,null,null,'showroom_id',null),
+  ('purchase_items','parent','purchases','view','create','edit','delete','purchases','purchase_id',null,null),
+  ('expenses','tenant','expenses','view','create','edit',null,null,null,'showroom_id',null),
+  ('loans','tenant','finance','view','create','edit',null,null,null,'showroom_id',null),
+  ('emi_schedules','tenant','emi','view','create','edit',null,null,null,'showroom_id',null),
+  ('service_records','tenant','service','view','create','edit',null,null,null,'showroom_id',null),
+  ('service_items','parent','service','view','create','edit','delete','service_records','service_id',null,null),
+  ('vehicle_free_services','tenant','service','view','create','edit',null,null,null,'showroom_id',null),
+  ('warranties','tenant','warranty','view','create','edit',null,null,null,'showroom_id',null),
+  ('warranty_claims','tenant','warranty','view','claim','edit',null,null,null,'showroom_id',null),
+  ('insurance_policies','tenant','insurance','view','create','edit',null,null,null,'showroom_id',null),
+  ('reminders','tenant','reminders','view','create','edit',null,null,null,'showroom_id',null),
+  ('notifications','tenant','notifications','view','create','edit',null,null,null,'showroom_id','own rows always readable; showroom broadcasts need showroom access'),
+  ('accounts','tenant','accounting','view','create','edit',null,null,null,'showroom_id',null),
+  ('accounting_transactions','tenant','accounting','view','post',null,null,null,null,'showroom_id','journals are written by app_acc.post_journal() only'),
+  ('accounting_entries','parent','accounting','view',null,null,null,'accounting_transactions','transaction_id',null,'append-only through the parent journal'),
+  ('attachments','tenant','documents','view','create','edit','delete',null,null,'showroom_id',null),
+  ('audit_logs','append_only','audit','view',null,null,null,null,null,'showroom_id','read-only governance log; writers bypass RLS as definer'),
+  ('document_sequences','admin_only',null,null,null,null,null,null,null,null,'numbering is allocated by RPCs; never exposed through the API'),
+  ('idempotency_keys','self','settings','view',null,null,null,null,null,'user_id','a user may inspect their own replay guard'),
+  ('sync_conflicts','tenant','settings','view','create','edit',null,null,null,'showroom_id',null)
+on conflict (table_name) do update
+   set kind = excluded.kind, module = excluded.module,
+       select_action = excluded.select_action, insert_action = excluded.insert_action,
+       update_action = excluded.update_action, delete_action = excluded.delete_action,
+       parent_table = excluded.parent_table, parent_fk = excluded.parent_fk,
+       scope_column = excluded.scope_column, note = excluded.note;
+
+
+-- ---------------------------------------------------------------------------
+-- Policy generator
+-- ---------------------------------------------------------------------------
+create or replace function app_sec.rebuild_rls_policies(p_only_table text default null)
+returns table (configured_table text, policy_count integer)
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
-  t text;
-  tenant_tables constant text[] := array[
-    'inventory', 'customers', 'customer_vehicles', 'sales', 'invoices',
-    'payments', 'loans', 'purchases', 'expenses', 'service_records',
-    'reminders', 'notifications', 'attachments', 'audit_logs', 'warranties',
-    'insurance_policies', 'users'
-  ];
+  c        record;
+  v_sel    text;
+  v_ins    text;
+  v_upd    text;
+  v_del    text;
+  v_created integer;
+  v_sql    text;
 begin
-  foreach t in array tenant_tables loop
-    execute format('alter table public.%I enable row level security', t);
+  for c in
+    select cfg.*
+      from app_sec.rls_policy_config cfg
+     where (p_only_table is null or p_only_table = cfg.table_name)
+       and exists (select 1 from information_schema.tables t
+                    where t.table_schema = 'public' and t.table_name = cfg.table_name)
+     order by cfg.table_name
+  loop
+    -- reset per iteration: a policy expression from the previous table must
+    -- never leak into this one (plpgsql keeps locals between loop passes)
+    v_sel := null; v_ins := null; v_upd := null; v_del := null; v_created := 0;
+
+    execute format('alter table public.%I enable row level security', c.table_name);
+    execute format('alter table public.%I force row level security', c.table_name);
+
+    -- ---- SELECT ----------------------------------------------------------
+    case c.kind
+      when 'tenant' then
+        if c.table_name = 'showrooms' then
+          -- Never reference the policy's own table here: a self-join inside a
+          -- policy on showrooms makes Postgres re-enter the policy and abort with
+          -- "infinite recursion detected in policy". accessible_showroom_ids() is
+          -- SECURITY DEFINER, so its own scan of showrooms runs outside RLS.
+          v_sel := 'app_sec.is_super_admin() or id in (select app_sec.accessible_showroom_ids())';
+        elsif c.table_name = 'notifications' then
+          v_sel := '(user_id = app_sec.current_user_id()) or (user_id is null '
+                || 'and (showroom_id is null or app_sec.can_access_showroom(showroom_id))) or app_sec.is_super_admin()';
+        elsif c.table_name = 'users' then
+          v_sel := 'app_sec.is_super_admin() or auth_user_id = auth.uid() '
+                || 'or showroom_id in (select app_sec.accessible_showroom_ids())';
+        elsif c.table_name in ('user_roles','user_showroom_access') then
+          -- assignment tables: you always see your own, a manager sees the ones
+          -- inside their showrooms, and org-wide grants stay super-admin only.
+          v_sel := format('app_sec.is_super_admin() or %1$I.user_id = app_sec.current_user_id() '
+                       || 'or (%2$I is not null and %2$I in (select app_sec.accessible_showroom_ids()))',
+                          c.table_name, c.scope_column);
+        else
+          v_sel := format('app_sec.is_super_admin() or %s',
+                          case when c.scope_column is null then 'true'
+                               else format('%I in (select app_sec.accessible_showroom_ids())', c.scope_column)
+                          end);
+        end if;
+      when 'parent' then
+        v_sel := format('app_sec.is_super_admin() or exists (select 1 from public.%I p '
+                     || 'where p.id = %I.%I and (p.showroom_id is null or app_sec.can_access_showroom(p.showroom_id)))',
+                     c.parent_table, c.table_name, c.parent_fk);
+      when 'self' then
+        v_sel := format('app_sec.is_super_admin() or %I = app_sec.current_user_id()', c.scope_column);
+      when 'global_read' then
+        v_sel := 'auth.uid() is not null';
+      when 'admin_only' then
+        v_sel := 'app_sec.is_super_admin()';
+      when 'append_only' then
+        if c.table_name = 'audit_logs' then
+          v_sel := 'app_sec.is_super_admin() or (showroom_id in (select app_sec.accessible_showroom_ids())'
+                || ' and (user_id = app_sec.current_user_id()'
+                || '      or app_sec.has_permission(''audit'',''view'')))';
+        else
+          v_sel := 'app_sec.is_super_admin() or showroom_id in (select app_sec.accessible_showroom_ids())';
+        end if;
+    end case;
+
+    if c.select_action is not null and c.kind = 'tenant'
+       and c.table_name not in ('showrooms','users','notifications','audit_logs') then
+      v_sel := format('(app_sec.is_super_admin() or app_sec.has_permission(%L,%L)) and %s',
+                      c.module, c.select_action, v_sel);
+    end if;
+
+    -- ---- INSERT ----------------------------------------------------------
+    if c.insert_action is not null then
+      case
+        when c.kind = 'tenant' and c.table_name = 'showrooms' then
+          v_ins := format('app_sec.is_super_admin() or app_sec.has_permission(%L,%L)', c.module, c.insert_action);
+        when c.kind = 'tenant' then
+          v_ins := format('(app_sec.is_super_admin() or app_sec.has_permission(%L,%L)) %s',
+                       c.module, c.insert_action,
+                       case when c.scope_column is null then ''
+                            else format(' and app_sec.can_access_showroom(%I)', c.scope_column) end);
+        when c.kind = 'self' then
+          v_ins := format('%I = app_sec.current_user_id()', c.scope_column);
+        when c.kind = 'global_read' then
+          v_ins := format('app_sec.has_permission(%L,%L)', c.module, c.insert_action);
+        when c.kind = 'admin_only' then
+          v_ins := 'app_sec.is_super_admin()';
+        when c.kind = 'parent' then
+          v_ins := format('app_sec.has_permission(%L,%L) and exists (select 1 from public.%I p '
+                       || 'where p.id = %I.%I and app_sec.can_access_showroom(p.showroom_id))',
+                       c.module, c.insert_action, c.parent_table, c.table_name, c.parent_fk);
+        when c.kind = 'append_only' then
+          v_ins := null;   -- ledgers are written by SECURITY DEFINER paths only
+      end case;
+    else
+      v_ins := null;
+    end if;
+
+    -- ---- UPDATE / DELETE -------------------------------------------------
+    if c.update_action is not null then
+      v_upd := format('(app_sec.is_super_admin() or app_sec.has_permission(%L,%L))', c.module, c.update_action);
+      if c.kind = 'tenant' and c.table_name <> 'showrooms' and c.scope_column is not null then
+        v_upd := v_upd || format(' and %I in (select app_sec.accessible_showroom_ids())', c.scope_column);
+      elsif c.kind = 'tenant' then
+        v_upd := v_upd || format(' and id in (select app_sec.accessible_showroom_ids())');
+      elsif c.kind = 'self' then
+        v_upd := format('%I = app_sec.current_user_id()', c.scope_column);
+      elsif c.kind = 'parent' then
+        v_upd := v_upd || format(' and exists (select 1 from public.%I p where p.id = %I.%I'
+                             || ' and app_sec.can_access_showroom(p.showroom_id))',
+                             c.parent_table, c.table_name, c.parent_fk);
+      end if;
+    end if;
+
+    if c.delete_action is not null then
+      v_del := format('(app_sec.is_super_admin() or app_sec.has_permission(%L,%L))', c.module, c.delete_action);
+      if c.kind = 'tenant' and c.scope_column is not null then
+        v_del := v_del || format(' and %I in (select app_sec.accessible_showroom_ids())', c.scope_column);
+      elsif c.kind = 'global_read' or c.kind = 'admin_only' then
+        v_del := v_del;
+      elsif c.kind = 'parent' then
+        v_del := v_del || format(' and exists (select 1 from public.%I p where p.id = %I.%I'
+                             || ' and app_sec.can_access_showroom(p.showroom_id))',
+                             c.parent_table, c.table_name, c.parent_fk);
+      elsif c.kind = 'self' then
+        v_del := format('%I = app_sec.current_user_id()', c.scope_column);
+      end if;
+    end if;
+
+    -- drop then recreate: idempotent by construction
+    if c.select_action is not null then
+      execute format('drop policy if exists %1$I_select on public.%1$I', c.table_name);
+      execute format('create policy %1$I_select on public.%1$I for select to authenticated
+                        using (%s)', c.table_name, coalesce(v_sel, 'false'));
+      v_created := 1;
+    else
+      execute format('drop policy if exists %1$I_select on public.%1$I', c.table_name);
+    end if;
+
+    if v_ins is not null then
+      execute format('drop policy if exists %1$I_insert on public.%1$I', c.table_name);
+      execute format('create policy %1$I_insert on public.%1$I for insert to authenticated
+                        with check (%s)', c.table_name, v_ins);
+      v_created := v_created + 1;
+    end if;
+
+    if v_upd is not null then
+      execute format('drop policy if exists %1$I_update on public.%1$I', c.table_name);
+      execute format('create policy %1$I_update on public.%1$I for update to authenticated
+                        using (%s) with check (%s)', c.table_name,
+                        coalesce(v_sel, v_upd), v_upd);
+      v_created := v_created + 1;
+    end if;
+
+    if v_del is not null then
+      execute format('drop policy if exists %1$I_delete on public.%1$I', c.table_name);
+      execute format('create policy %1$I_delete on public.%1$I for delete to authenticated
+                        using (%s)', c.table_name, v_del);
+      v_created := v_created + 1;
+    end if;
+
+    -- A second, narrower SELECT policy so a user can always read their own profile.
+    if c.table_name = 'users' then
+      execute format('drop policy if exists users_self_select on public.users');
+      execute format('create policy users_self_select on public.users for select to authenticated
+                        using (auth_user_id = auth.uid())');
+      v_created := v_created + 1;
+    end if;
+
+    return query select c.table_name, v_created;
   end loop;
 end;
 $$;
 
-alter table public.showrooms enable row level security;
-alter table public.roles enable row level security;
-alter table public.permissions enable row level security;
-alter table public.user_roles enable row level security;
-alter table public.role_permissions enable row level security;
-alter table public.brands enable row level security;
-alter table public.products enable row level security;
-alter table public.product_colors enable row level security;
-alter table public.product_images enable row level security;
-alter table public.sale_items enable row level security;
-alter table public.invoice_items enable row level security;
-alter table public.purchase_items enable row level security;
-alter table public.service_items enable row level security;
-alter table public.emi_schedules enable row level security;
-alter table public.finance_companies enable row level security;
-alter table public.suppliers enable row level security;
-alter table public.expense_categories enable row level security;
-alter table public.free_service_plans enable row level security;
-alter table public.emi_plans enable row level security;
-alter table public.product_accessories enable row level security;
-alter table public.stock_history enable row level security;
-alter table public.stock_transfers enable row level security;
-alter table public.free_service_grants enable row level security;
-alter table public.warranty_claims enable row level security;
-alter table public.device_tokens enable row level security;
-alter table public.document_sequences enable row level security;
--- Accounting tables are created in 013_accounting.sql and enable RLS there.
+select configured_table as table_name, policy_count as policies
+  from app_sec.rebuild_rls_policies() order by 1;
 
--- ------------------------------------------------------------ showrooms
-
-drop policy if exists showrooms_select on public.showrooms;
-create policy showrooms_select on public.showrooms
-  for select to authenticated
-  using (public.can_access_showroom(id));
-
-drop policy if exists showrooms_write on public.showrooms;
-create policy showrooms_write on public.showrooms
-  for all to authenticated
-  using (public.has_permission('showroom', 'edit'))
-  with check (public.has_permission('showroom', 'create'));
-
--- ---------------------------------------------------------------- users
-
-drop policy if exists users_select on public.users;
-create policy users_select on public.users
-  for select to authenticated
-  using (auth_user_id = auth.uid() or public.has_permission('users', 'view'));
-
-drop policy if exists users_insert on public.users;
-create policy users_insert on public.users
-  for insert to authenticated
-  with check (
-    auth_user_id = auth.uid() or public.has_permission('users', 'create')
-  );
-
-drop policy if exists users_update on public.users;
-create policy users_update on public.users
-  for update to authenticated
-  using (auth_user_id = auth.uid() or public.has_permission('users', 'edit'))
-  with check (auth_user_id = auth.uid() or public.has_permission('users', 'edit'));
-
--- ------------------------------------------------- tenant-scoped tables
-
+-- ---------------------------------------------------------------------------
+-- Grant hygiene: the API role gets only what the policies assume, and no
+-- financial table can ever be TRUNCATEd/DELETEd through the gateway.
+-- ---------------------------------------------------------------------------
 do $$
 declare
-  t text;
-  tenant_tables constant text[] := array[
-    'inventory', 'customers', 'customer_vehicles', 'sales', 'invoices',
-    'payments', 'loans', 'purchases', 'expenses', 'service_records',
-    'reminders', 'notifications', 'attachments', 'warranties',
-    'insurance_policies'
-  ];
+  c record;
 begin
-  foreach t in array tenant_tables loop
-    execute format('drop policy if exists %I on public.%I', t || '_tenant', t);
-    execute format(
-      'create policy %I on public.%I for all to authenticated
-         using (public.can_access_showroom(showroom_id))
-         with check (public.can_access_showroom(showroom_id))',
-      t || '_tenant', t
-    );
+  for c in select * from app_sec.rls_policy_config order by table_name loop
+    execute format('grant select on public.%I to anon, authenticated', c.table_name);
+    execute format('grant insert on public.%I to authenticated', c.table_name);
+    execute format('grant update on public.%I to authenticated', c.table_name);
+    if c.delete_action is not null then
+      execute format('grant delete on public.%I to authenticated', c.table_name);
+    else
+      execute format('revoke delete on public.%I from anon, authenticated', c.table_name);
+    end if;
+    execute format('revoke truncate on public.%I from anon, authenticated', c.table_name);
+    execute format('revoke all on public.%I from public', c.table_name);
   end loop;
-end;
+  -- ledgers: no client-side writes at all, they belong to the RPC layer
+  execute 'revoke insert, update, delete on public.audit_logs, public.stock_movements,
+            public.accounting_entries, public.document_sequences from anon, authenticated';
+end
 $$;
 
--- ------------------------------------------------------ audit trail read
+-- Internal schemas must never be reachable from the API.
+revoke all on schema app_sec, app_util, app_gen, app_acc from public, anon, authenticated;
+grant usage on schema app_sec, app_util, app_gen, app_acc to service_role;
 
-drop policy if exists audit_logs_select on public.audit_logs;
-create policy audit_logs_select on public.audit_logs
-  for select to authenticated
-  using (public.has_permission('audit', 'view')
-         and public.can_access_showroom(showroom_id));
-
--- ------------------------------------------------------------ RBAC data
-
-drop policy if exists roles_select on public.roles;
-create policy roles_select on public.roles
-  for select to authenticated using (true);
-
-drop policy if exists roles_write on public.roles;
-create policy roles_write on public.roles
-  for all to authenticated
-  using (public.has_permission('roles', 'manage'))
-  with check (public.has_permission('roles', 'manage'));
-
-drop policy if exists permissions_select on public.permissions;
-create policy permissions_select on public.permissions
-  for select to authenticated using (true);
-
-drop policy if exists permissions_write on public.permissions;
-create policy permissions_write on public.permissions
-  for all to authenticated
-  using (public.has_permission('roles', 'manage'))
-  with check (public.has_permission('roles', 'manage'));
-
-drop policy if exists user_roles_all on public.user_roles;
-create policy user_roles_all on public.user_roles
-  for all to authenticated
-  using (public.has_permission('users', 'edit')
-         or exists (select 1 from public.users u
-                     where u.id = user_id and u.auth_user_id = auth.uid()))
-  with check (public.has_permission('users', 'edit'));
-
-drop policy if exists role_permissions_all on public.role_permissions;
-create policy role_permissions_all on public.role_permissions
-  for all to authenticated
-  using (public.has_permission('roles', 'manage'))
-  with check (public.has_permission('roles', 'manage'));
-
--- -------------------------------------------------------------- catalog
-
-drop policy if exists brands_select on public.brands;
-create policy brands_select on public.brands
-  for select to authenticated using (true);
-
-drop policy if exists brands_write on public.brands;
-create policy brands_write on public.brands
-  for all to authenticated
-  using (public.has_permission('products', 'edit'))
-  with check (public.has_permission('products', 'create'));
-
-drop policy if exists products_select on public.products;
-create policy products_select on public.products
-  for select to authenticated using (true);
-
-drop policy if exists products_write on public.products;
-create policy products_write on public.products
-  for all to authenticated
-  using (public.has_permission('products', 'edit'))
-  with check (public.has_permission('products', 'create'));
-
--- Colors/images belong to a product row (no showroom column of their own).
-drop policy if exists product_colors_all on public.product_colors;
-create policy product_colors_all on public.product_colors
-  for all to authenticated
-  using (public.has_permission('products', 'edit'))
-  with check (public.has_permission('products', 'create'));
-
-drop policy if exists product_images_all on public.product_images;
-create policy product_images_all on public.product_images
-  for all to authenticated
-  using (public.has_permission('products', 'edit'))
-  with check (public.has_permission('products', 'create'));
-
--- -------------------------------------------------------- child tables
-
-drop policy if exists sale_items_all on public.sale_items;
-create policy sale_items_all on public.sale_items
-  for all to authenticated
-  using (exists (select 1 from public.sales s
-                  where s.id = sale_id
-                    and public.can_access_showroom(s.showroom_id)))
-  with check (exists (select 1 from public.sales s
-                       where s.id = sale_id
-                         and public.can_access_showroom(s.showroom_id)));
-
-drop policy if exists invoice_items_all on public.invoice_items;
-create policy invoice_items_all on public.invoice_items
-  for all to authenticated
-  using (exists (select 1 from public.invoices i
-                  where i.id = invoice_id
-                    and public.can_access_showroom(i.showroom_id)))
-  with check (exists (select 1 from public.invoices i
-                       where i.id = invoice_id
-                         and public.can_access_showroom(i.showroom_id)));
-
-drop policy if exists purchase_items_all on public.purchase_items;
-create policy purchase_items_all on public.purchase_items
-  for all to authenticated
-  using (exists (select 1 from public.purchases p
-                  where p.id = purchase_id
-                    and public.can_access_showroom(p.showroom_id)))
-  with check (exists (select 1 from public.purchases p
-                       where p.id = purchase_id
-                         and public.can_access_showroom(p.showroom_id)));
-
-drop policy if exists service_items_all on public.service_items;
-create policy service_items_all on public.service_items
-  for all to authenticated
-  using (exists (select 1 from public.service_records r
-                  where r.id = service_id
-                    and public.can_access_showroom(r.showroom_id)))
-  with check (exists (select 1 from public.service_records r
-                       where r.id = service_id
-                         and public.can_access_showroom(r.showroom_id)));
-
-drop policy if exists emi_schedules_all on public.emi_schedules;
-create policy emi_schedules_all on public.emi_schedules
-  for all to authenticated
-  using (exists (select 1 from public.loans l
-                  where l.id = loan_id
-                    and public.can_access_showroom(l.showroom_id)))
-  with check (exists (select 1 from public.loans l
-                       where l.id = loan_id
-                         and public.can_access_showroom(l.showroom_id)));
-
-drop policy if exists warranty_claims_all on public.warranty_claims;
-create policy warranty_claims_all on public.warranty_claims
-  for all to authenticated
-  using (exists (select 1 from public.warranties w
-                  where w.id = warranty_id
-                    and public.can_access_showroom(w.showroom_id)))
-  with check (public.has_permission('warranty', 'edit'));
-
-drop policy if exists free_service_grants_all on public.free_service_grants;
-create policy free_service_grants_all on public.free_service_grants
-  for all to authenticated
-  using (exists (select 1 from public.customer_vehicles v
-                  where v.id = vehicle_id
-                    and public.can_access_showroom(v.showroom_id)))
-  with check (public.has_permission('service', 'edit'));
-
-drop policy if exists emi_plans_all on public.emi_plans;
-create policy emi_plans_all on public.emi_plans
-  for all to authenticated
-  using (public.has_permission('products', 'view'))
-  with check (public.has_permission('products', 'create'));
-
-drop policy if exists product_accessories_all on public.product_accessories;
-create policy product_accessories_all on public.product_accessories
-  for all to authenticated
-  using (public.has_permission('products', 'view'))
-  with check (public.has_permission('products', 'edit'));
-
-drop policy if exists stock_history_select on public.stock_history;
-create policy stock_history_select on public.stock_history
-  for select to authenticated
-  using (public.has_permission('inventory', 'view'));
-
-drop policy if exists stock_transfers_all on public.stock_transfers;
-create policy stock_transfers_all on public.stock_transfers
-  for all to authenticated
-  using (public.has_permission('inventory', 'view'))
-  with check (public.has_permission('inventory', 'transfer'));
-
--- Reference data: readable by every signed-in user.
-drop policy if exists finance_companies_select on public.finance_companies;
-create policy finance_companies_select on public.finance_companies
-  for select to authenticated using (true);
-
-drop policy if exists finance_companies_write on public.finance_companies;
-create policy finance_companies_write on public.finance_companies
-  for all to authenticated
-  using (public.has_permission('finance', 'edit'))
-  with check (public.has_permission('finance', 'create'));
-
-drop policy if exists suppliers_select on public.suppliers;
-create policy suppliers_select on public.suppliers
-  for select to authenticated using (true);
-
-drop policy if exists suppliers_write on public.suppliers;
-create policy suppliers_write on public.suppliers
-  for all to authenticated
-  using (public.has_permission('purchases', 'edit'))
-  with check (public.has_permission('purchases', 'create'));
-
-drop policy if exists expense_categories_select on public.expense_categories;
-create policy expense_categories_select on public.expense_categories
-  for select to authenticated using (true);
-
-drop policy if exists expense_categories_write on public.expense_categories;
-create policy expense_categories_write on public.expense_categories
-  for all to authenticated
-  using (public.has_permission('expenses', 'edit'))
-  with check (public.has_permission('expenses', 'create'));
-
-drop policy if exists free_service_plans_all on public.free_service_plans;
-create policy free_service_plans_all on public.free_service_plans
-  for all to authenticated
-  using (public.has_permission('service', 'edit'))
-  with check (public.has_permission('service', 'create'));
-
--- --------------------------------------------------------------- devices
-
-drop policy if exists device_tokens_all on public.device_tokens;
-create policy device_tokens_all on public.device_tokens
-  for all to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
-
--- document_sequences is internal to next_document_number() (security
--- definer); no policy means no direct client access.
+-- Views are exposed read-only; every business view is created WITH
+-- (security_invoker = true) in 011 so it can never leak a row the base-table
+-- RLS would hide.
+do $$
+declare
+  v record;
+begin
+  for v in select viewname from pg_views where schemaname = 'public' loop
+    execute format('grant select on public.%I to authenticated', v.viewname);
+    execute format('revoke all on public.%I from public', v.viewname);
+  end loop;
+end
+$$;
