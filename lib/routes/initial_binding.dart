@@ -1,7 +1,9 @@
 import 'package:enterprise_bike_showroom/common/controllers/app_state_controller.dart';
 import 'package:enterprise_bike_showroom/common/controllers/sync_state_controller.dart';
 import 'package:enterprise_bike_showroom/common/models/sync_queue_entry.dart';
+import 'package:enterprise_bike_showroom/core/constants/entity_constants.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/auth_controller.dart';
+import 'package:enterprise_bike_showroom/features/customers/repositories/customer_repository.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:enterprise_bike_showroom/features/notifications/controllers/notification_controller.dart';
 import 'package:enterprise_bike_showroom/features/notifications/repositories/notification_repository.dart';
@@ -10,8 +12,11 @@ import 'package:enterprise_bike_showroom/features/search/repositories/search_rep
 import 'package:enterprise_bike_showroom/features/users/repositories/user_repository.dart';
 import 'package:enterprise_bike_showroom/services/auth_service.dart';
 import 'package:enterprise_bike_showroom/services/connectivity_service.dart';
+import 'package:enterprise_bike_showroom/services/export_service.dart';
+import 'package:enterprise_bike_showroom/services/image_service.dart';
 import 'package:enterprise_bike_showroom/services/local_database_service.dart';
 import 'package:enterprise_bike_showroom/services/notification_service.dart';
+import 'package:enterprise_bike_showroom/services/pdf_service.dart';
 import 'package:enterprise_bike_showroom/services/storage_service.dart';
 import 'package:enterprise_bike_showroom/services/supabase_service.dart';
 import 'package:enterprise_bike_showroom/services/sync_service.dart';
@@ -60,7 +65,18 @@ class InitialBinding extends Bindings {
     );
     notifications.init();
 
-    Get.put<StorageService>(StorageService(), permanent: true);
+    final StorageService storage =
+        Get.put<StorageService>(StorageService(), permanent: true);
+
+    // Stateless pipelines shared by several modules. They are `Get.find`-ed
+    // from invoice/payment/service views (PDF print), the report screen
+    // (CSV/Excel/PDF export) and the upload sheets, so they must be global.
+    final PdfService pdf = Get.put<PdfService>(PdfService(), permanent: true);
+    Get.put<ExportService>(ExportService(pdf: pdf), permanent: true);
+    Get.put<ImageService>(
+      ImageService(storage: storage),
+      permanent: true,
+    );
   }
 
   void _registerRepositories() {
@@ -72,11 +88,19 @@ class InitialBinding extends Bindings {
     );
     Get.put<SearchRepository>(SearchRepository(supabase), permanent: true);
 
-    // Offline queue applier for user mutations.
-    Get.find<SyncService>().registerHandler(
-      'user',
+    // Offline queue appliers. Today the customer and user flows are the ones
+    // that enqueue writes (`*_controller` -> `SyncService.enqueue`); any
+    // entity type without a handler is flagged as a conflict by SyncService.
+    final SyncService sync = Get.find<SyncService>();
+    sync.registerHandler(
+      EntityType.user,
       Get.find<UserRepository>().applySyncOp,
     );
+    final CustomerRepository customers = Get.put<CustomerRepository>(
+      CustomerRepository(supabase, Get.find<LocalDatabaseService>()),
+      permanent: true,
+    );
+    sync.registerHandler(EntityType.customer, customers.applySyncOp);
   }
 
   void _registerControllers() {
@@ -107,8 +131,8 @@ class InitialBinding extends Bindings {
       ),
       permanent: true,
     );
-    Get.put<SearchController>(
-      SearchController(Get.find<SearchRepository>()),
+    Get.put<GlobalSearchController>(
+      GlobalSearchController(Get.find<SearchRepository>()),
       permanent: true,
     );
   }

@@ -81,14 +81,8 @@ class ProductFormView extends GetView<ProductController> {
     _ColorRow('Red', '#C62828'),
     _ColorRow('Black', '#212121'),
   ];
-  final List<FileRef> _pickedImages = <FileRef>[];
+  final List<_ProductImageRef> _pickedImages = <_ProductImageRef>[];
   final ImagePicker _picker = ImagePicker();
-
-  class FileRef {
-    FileRef(this.path, this.isPrimary);
-    final String path;
-    final bool isPrimary;
-  }
 
   Future<void> _load(String id) async {
     final ProductModel? product = await controller.repository.getById(id);
@@ -276,7 +270,7 @@ class ProductFormView extends GetView<ProductController> {
                 spacing: 10,
                 runSpacing: 10,
                 children: <Widget>[
-                  for (final FileRef ref in _pickedImages)
+                  for (final _ProductImageRef ref in _pickedImages)
                     Stack(
                       children: <Widget>[
                         ref.path.startsWith('http')
@@ -362,7 +356,7 @@ class ProductFormView extends GetView<ProductController> {
       if (images == null || images.isEmpty) return;
       setState(() {
         for (final XFile file in images) {
-          _pickedImages.add(FileRef(file.path, _pickedImages.isEmpty));
+          _pickedImages.add(_ProductImageRef(file.path, _pickedImages.isEmpty));
         }
       });
     } catch (e) {
@@ -429,7 +423,7 @@ class ProductFormView extends GetView<ProductController> {
       // Images (compress + upload to Supabase Storage)
       final ImageService imageService = Get.find<ImageService>();
       for (int i = 0; i < _pickedImages.length; i++) {
-        final FileRef ref = _pickedImages[i];
+        final _ProductImageRef ref = _pickedImages[i];
         if (ref.path.startsWith('http')) {
           await controller.repository.upsertImage(ProductImageModel(
             productId: product.id ?? id!,
@@ -475,4 +469,12 @@ class _ColorRow {
 
   final TextEditingController name;
   final TextEditingController hex;
+}
+
+/// A locally picked image (path + whether it is the primary photo).
+class _ProductImageRef {
+  _ProductImageRef(this.path, this.isPrimary);
+
+  final String path;
+  final bool isPrimary;
 }

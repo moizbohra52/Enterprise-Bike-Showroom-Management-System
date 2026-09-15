@@ -201,7 +201,7 @@ class ExpenseFormView extends GetView<ExpenseFormController> {
       if (file == null) return;
       final ImageService imageService = Get.find<ImageService>();
       final String path = await imageService.uploadDocument(
-        bucket: SupabaseConfig.StorageBuckets.expenseAttachments,
+        bucket: StorageBuckets.expenseAttachments,
         collection: 'expenses',
         entityId: 'drafts',
         file: File(file.path),

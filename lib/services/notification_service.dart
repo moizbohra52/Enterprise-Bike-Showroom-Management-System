@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -40,10 +39,12 @@ class NotificationService {
   /// The last fetched FCM token (null on web / when unavailable).
   String? get currentToken => _currentToken;
 
+  /// Push is only available on builds that carry a Firebase configuration.
   bool get supported => !kIsWeb;
 
   /// Platform name stored with the token.
   String get platformName {
+    if (kIsWeb) return 'web';
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return 'android';
@@ -51,14 +52,17 @@ class NotificationService {
         return 'ios';
       case TargetPlatform.windows:
         return 'windows';
-      default:
-        return 'web';
+      case TargetPlatform.macOS:
+        return 'macos';
+      case TargetPlatform.linux:
+      case TargetPlatform.fuchsia:
+        return 'linux';
     }
   }
 
   /// Initializes messaging listeners (safe no-op where FCM is unavailable).
   Future<void> init() async {
-    if (Firebase.apps.isEmpty) {
+    if (!supported || Firebase.apps.isEmpty) {
       AppLogger.warning('FCM', 'Firebase not initialized; push disabled');
       return;
     }
@@ -69,6 +73,9 @@ class NotificationService {
         badge: true,
         sound: true,
       );
+      // Cold start: the notification the app was launched from.
+      final RemoteMessage? launch = await messaging.getInitialMessage();
+      if (launch != null) _onOpened(launch);
       _foregroundSub = messaging.onMessage.listen(_onForeground);
       _openedSub = messaging.onMessageOpenedApp.listen(_onOpened);
       AppLogger.info('FCM', 'initialized');
@@ -177,6 +184,7 @@ class NotificationService {
   Future<String> _deviceName() async {
     try {
       final DeviceInfoPlugin info = DeviceInfoPlugin();
+      if (kIsWeb) return 'Web browser';
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
           final AndroidDeviceInfo d = await info.androidInfo;

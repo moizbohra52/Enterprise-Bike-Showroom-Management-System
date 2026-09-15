@@ -117,7 +117,7 @@ class ImageService {
       fileName: '${index}_${IdGenerator.uuid()}.jpg',
     );
     return storage.uploadWithRetry(
-      bucket: SupabaseConfig.StorageBuckets.productImages,
+      bucket: StorageBuckets.productImages,
       path: path,
       file: compressed,
       onProgress: onProgress,

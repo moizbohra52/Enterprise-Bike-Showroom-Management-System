@@ -269,7 +269,7 @@ class _UploadSheetState extends State<_UploadSheet> {
     try {
       final File file = File(path);
       final String storagePath = await controller.imageService.uploadDocument(
-        bucket: SupabaseConfig.StorageBuckets.customerDocuments,
+        bucket: StorageBuckets.customerDocuments,
         collection: _entityType,
         entityId: _entityId.text.trim(),
         file: file,
