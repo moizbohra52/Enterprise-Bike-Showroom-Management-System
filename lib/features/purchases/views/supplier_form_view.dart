@@ -81,7 +81,7 @@ class SupplierFormView extends GetView<SupplierController> {
     'notes': TextEditingController(),
   };
 
-  String _status = 'active';
+  final RxString _status = 'active'.obs;
 
   void _apply(SupplierModel? s) {
     if (s == null) return;
@@ -97,7 +97,7 @@ class SupplierFormView extends GetView<SupplierController> {
     _fields['gstin']?.text = s.gstin;
     _fields['terms']?.text = '${s.paymentTermsDays}';
     _fields['notes']?.text = s.notes;
-    _status = s.status;
+    _status.value = s.status;
   }
 
   Widget _form() {
@@ -148,16 +148,16 @@ class SupplierFormView extends GetView<SupplierController> {
               Expanded(
                 child: Column(
                   children: <Widget>[
-                    AppDropdown<String>(
+                    Obx(() => AppDropdown<String>(
                       label: 'Status',
                       options: const <DropdownOption<String>>[
                         DropdownOption(value: 'active', label: 'Active'),
                         DropdownOption(value: 'inactive', label: 'Inactive'),
                       ],
-                      value: _status,
+                      value: _status.value,
                       onChanged: (String? value) =>
-                          setState(() => _status = value ?? 'active'),
-                    ),
+                          _status.value = value ?? 'active',
+                    )),
                     const SizedBox(height: 12),
                     _field('notes', 'Notes', maxLines: 8),
                   ],
@@ -202,7 +202,7 @@ class SupplierFormView extends GetView<SupplierController> {
       'gstin': _fields['gstin']!.text.trim().toUpperCase(),
       'payment_terms_days': int.tryParse(_fields['terms']!.text) ?? 30,
       'notes': _fields['notes']!.text.trim(),
-      'status': _status,
+      'status': _status.value,
     };
     final PurchaseRepository repository = Get.find<PurchaseRepository>();
     try {

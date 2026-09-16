@@ -37,23 +37,20 @@ class AppFilterDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonHideUnderline(
-      child: ButtonTheme(
-        aligned: false,
-        child: DropdownButton<T>(
-          value: _inOptions() ? value : null,
-          hint: Text(label),
-          borderRadius: BorderRadius.circular(10),
-          isDense: true,
-          dropdownColor: Theme.of(context).canvasColor,
-          items: <DropdownMenuItem<T>>[
-            for (final DropdownOption<T> option in options)
-              DropdownMenuItem<T>(
-                value: option.value,
-                child: Text(option.label, style: const TextStyle(fontSize: 13)),
-              ),
-          ],
-          onChanged: onChanged,
-        ),
+      child: DropdownButton<T>(
+        value: _inOptions() ? value : null,
+        hint: Text(label),
+        borderRadius: BorderRadius.circular(10),
+        isDense: true,
+        dropdownColor: Theme.of(context).canvasColor,
+        items: <DropdownMenuItem<T>>[
+          for (final DropdownOption<T> option in options)
+            DropdownMenuItem<T>(
+              value: option.value,
+              child: Text(option.label, style: const TextStyle(fontSize: 13)),
+            ),
+        ],
+        onChanged: onChanged,
       ),
     );
   }

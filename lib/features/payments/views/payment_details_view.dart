@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/payments/controllers/payment_controller.dart';
 import 'package:enterprise_bike_showroom/features/payments/models/payment_models.dart';
 import 'package:enterprise_bike_showroom/services/pdf_service.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Payment details + refund + receipt.
 class PaymentDetailsView extends GetView<PaymentDetailsController> {

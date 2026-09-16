@@ -29,7 +29,7 @@ class DocumentListView extends GetView<AttachmentController> {
     return AppShell(
       title: 'Documents',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.documentsUpload,
           child: AppButton(
             label: 'Upload',

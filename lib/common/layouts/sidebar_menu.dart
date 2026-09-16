@@ -32,7 +32,7 @@ class SidebarMenu extends StatelessWidget {
         _brand(theme),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             children: <Widget>[
               for (final AppMenuItem item in items)
                 _MenuItemTile(
@@ -60,7 +60,7 @@ class SidebarMenu extends StatelessWidget {
               color: theme.colorScheme.primary,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.pedals, color: Colors.white),
+            child: const Icon(Icons.two_wheeler, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(

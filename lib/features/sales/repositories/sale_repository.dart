@@ -21,7 +21,7 @@ class SaleRepository {
   /// Lists sales with customer + showroom joins, server-side pagination.
   Future<PaginatedResponse<SaleModel>> list(PageQuery query) async {
     try {
-      final dynamic result = await _builder(query);
+      final dynamic result = await (_builder(query)).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<SaleModel>.fromSupabase(
@@ -36,17 +36,13 @@ class SaleRepository {
   }
 
   dynamic _builder(PageQuery query) {
-    var builder = supabase
+    dynamic builder = supabase
         .table('sales')
-        .select(
-          '*, '
+        .select('*, '
           'customer:customers(name, phone), '
           'showroom:showrooms(name), '
           'sale_items(*), '
-          'count(invoices, foreignKey: (sale_id))',
-          count: CountOption.exact,
-        )
-        .range(query.offset, query.end);
+          'count(invoices, foreignKey: (sale_id))');
     final String? term = query.search;
     if (term != null && term.isNotEmpty) {
       builder = builder.or(
@@ -74,7 +70,7 @@ class SaleRepository {
     builder = query.orderBy == null
         ? builder.order('created_at', ascending: query.ascending)
         : builder.order(query.orderBy, ascending: query.ascending);
-    return builder;
+    return builder.range(query.offset, query.end);
   }
 
   Future<SaleModel?> getById(String id) async {
@@ -122,8 +118,9 @@ class SaleRepository {
     };
     final dynamic saleRow =
         await supabase.rpc('create_sale_transaction', params: salePayload);
-    final String saleId =
-        saleRow is Map ? SafeJson.asId(saleRow['id']) : (saleRow?.toString() ?? '');
+    final String saleId = saleRow is Map
+        ? (SafeJson.asId(saleRow['id']) ?? '')
+        : (saleRow?.toString() ?? '');
 
     // Invoice (server computes tax; returns the invoice row).
     final dynamic invoice = await supabase.rpc('create_invoice', params: <String, dynamic>{
@@ -169,12 +166,10 @@ class SaleRepository {
     String term, {
     String? showroomId,
   }) async {
-    var builder = supabase
+    dynamic builder = supabase
         .table('customers')
         .select()
-        .eq('status', 'active')
-        .order('name')
-        .limit(50);
+        .eq('status', 'active');
     if (showroomId != null && showroomId.isNotEmpty) {
       builder = builder.eq('showroom_id', showroomId);
     }
@@ -184,9 +179,10 @@ class SaleRepository {
         'name.ilike.%$trimmed%,phone.ilike.%$trimmed%,customer_code.ilike.%$trimmed%',
       );
     }
+    builder = builder.order('name').limit(50);
     final dynamic rows = await builder;
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows))
+      for (final dynamic row in SafeJson.asList(rows));
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -200,7 +196,7 @@ class SaleRepository {
         .eq('is_active', true)
         .order('sort_order');
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows))
+      for (final dynamic row in SafeJson.asList(rows));
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -215,7 +211,7 @@ class SaleRepository {
         .order('created_at', ascending: false)
         .limit(200);
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows))
+      for (final dynamic row in SafeJson.asList(rows));
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -230,7 +226,7 @@ class SaleRepository {
         .eq('is_active', true)
         .order('sort_order');
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows))
+      for (final dynamic row in SafeJson.asList(rows));
         if (row is Map) SafeJson.asMap(row),
     ];
   }

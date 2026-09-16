@@ -22,11 +22,9 @@ class InventoryRepository {
 
   Future<PaginatedResponse<InventoryModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table(_table)
-          .select('*, product:products(name, model, brand:brands(name))',
-              count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*, product:products(name, model, brand:brands(name))');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -47,7 +45,8 @@ class InventoryRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<InventoryModel>.fromSupabase(
@@ -132,7 +131,7 @@ class InventoryRepository {
           .order('created_at', ascending: false)
           .limit(100);
       return <StockHistoryModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) StockHistoryModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -148,7 +147,7 @@ class InventoryRepository {
           .order('created_at', ascending: false)
           .limit(limit);
       return <StockTransferModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) StockTransferModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {

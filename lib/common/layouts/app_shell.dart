@@ -44,7 +44,7 @@ class AppShell extends StatelessWidget {
     final String effectiveTitle =
         title ?? AppMenu.labelForRoute(_topRoute(route));
 
-    if (context.isDesktop || context.isTablet) {
+    if (context.isDesktop || context.isAppTablet) {
       return _DesktopShell(
         title: effectiveTitle,
         showBack: showBack,

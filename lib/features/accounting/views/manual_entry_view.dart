@@ -11,6 +11,7 @@ import 'package:enterprise_bike_showroom/common/widgets/app_text_field.dart';
 import 'package:enterprise_bike_showroom/common/models/dropdown_option.dart';
 import 'package:enterprise_bike_showroom/features/accounting/controllers/accounting_controller.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Manual journal entry (must balance: DR = CR).
 class ManualEntryView extends GetView<ManualEntryController> {

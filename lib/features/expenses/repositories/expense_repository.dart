@@ -20,17 +20,17 @@ class ExpenseRepository {
 
   Future<List<ExpenseCategoryModel>> categories({String? showroomId}) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('expense_categories')
           .select()
-          .eq('status', 'active')
-          .order('name');
+          .eq('status', 'active');
       if (showroomId != null && showroomId.isNotEmpty) {
         builder = builder.or('showroom_id.is.null,showroom_id.eq.$showroomId');
       }
+      builder = builder.order('name');
       final dynamic rows = await builder;
       return <ExpenseCategoryModel>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map)
             ExpenseCategoryModel.fromJson(SafeJson.asMap(row)),
       ];
@@ -57,13 +57,9 @@ class ExpenseRepository {
 
   Future<PaginatedResponse<ExpenseModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('expenses')
-          .select(
-            '*, category:expense_categories(name, icon)',
-            count: CountOption.exact,
-          )
-          .range(query.offset, query.end);
+          .select('*, category:expense_categories(name, icon)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -86,7 +82,8 @@ class ExpenseRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<ExpenseModel>.fromSupabase(

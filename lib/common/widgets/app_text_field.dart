@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Standard form text field with validation + optional prefix/suffix.
 class AppTextField extends StatefulWidget {
   const AppTextField({
     super.key,
     this.controller,
+    this.initialValue,
     this.label,
     this.hint,
     this.helper,
@@ -30,6 +32,9 @@ class AppTextField extends StatefulWidget {
   });
 
   final TextEditingController? controller;
+
+  /// Seed text when no [controller] is supplied (FormField-style).
+  final String? initialValue;
   final String? label;
   final String? hint;
   final String? helper;
@@ -63,12 +68,19 @@ class AppTextField extends StatefulWidget {
 class AppTextFieldState extends State<AppTextField> {
   TextEditingController? _controller;
   late FocusNode focusNode;
-  bool _obscured = false;
+  bool _obscured = true;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController();
+    if (widget.controller != null) {
+      _controller = widget.controller;
+      _ownsController = false;
+    } else {
+      _controller = TextEditingController(text: widget.initialValue);
+      _ownsController = true;
+    }
     focusNode = FocusNode();
   }
 
@@ -76,15 +88,29 @@ class AppTextFieldState extends State<AppTextField> {
   void didUpdateWidget(AppTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      focusNode.detach();
-      focusNode = FocusNode();
-      _controller = widget.controller ?? _controller;
+      if (_ownsController) {
+        _controller?.dispose();
+      }
+      if (widget.controller != null) {
+        _controller = widget.controller;
+        _ownsController = false;
+      } else {
+        _controller = TextEditingController(
+          text: widget.initialValue ?? _controller?.text,
+        );
+        _ownsController = true;
+      }
+    } else if (widget.controller == null &&
+        widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != null &&
+        (_controller?.text.isEmpty ?? true)) {
+      _controller?.text = widget.initialValue!;
     }
   }
 
   @override
   void dispose() {
-    if (widget.controller == null) {
+    if (_ownsController) {
       _controller?.dispose();
     }
     focusNode.dispose();
@@ -100,41 +126,47 @@ class AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final bool canObscure = widget.obscureText;
-    return TextFormField(
-      controller: _controller,
-      focusNode: focusNode,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      obscureText: canObscure && _obscured,
-      autofillHints: canObscure ? const <String>[AutofillHints.password] : null,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      maxLines: canObscure ? 1 : widget.maxLines,
-      maxLength: widget.maxLength,
-      autofocus: widget.autofocus,
-      textAlign: widget.textAlign,
-      inputFormatters: widget.inputFormatters,
-      onFieldSubmitted: widget.onSubmitted,
-      onChanged: widget.onChanged,
-      onTap: widget.onTap,
-      validator: widget.validator,
-      semanticsLabel: widget.semanticLabel ?? widget.label,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: widget.hint,
-        helperText: widget.helper,
-        prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
-        prefixText: widget.prefixText,
-        suffixIcon: canObscure
-            ? IconButton(
-                icon: Icon(
-                  _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  size: 20,
-                ),
-                onPressed: () => setState(() => _obscured = !_obscured),
-              )
-            : (widget.suffixIcon != null ? Icon(widget.suffixIcon) : null),
-        suffixText: widget.suffixText,
+    return Semantics(
+      label: widget.semanticLabel ?? widget.label,
+      child: TextFormField(
+        controller: _controller,
+        focusNode: focusNode,
+        enabled: widget.enabled,
+        readOnly: widget.readOnly,
+        obscureText: canObscure && _obscured,
+        autofillHints:
+            canObscure ? const <String>[AutofillHints.password] : null,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        maxLines: canObscure ? 1 : widget.maxLines,
+        maxLength: widget.maxLength,
+        autofocus: widget.autofocus,
+        textAlign: widget.textAlign,
+        inputFormatters: widget.inputFormatters,
+        onFieldSubmitted: widget.onSubmitted,
+        onChanged: widget.onChanged,
+        onTap: widget.onTap,
+        validator: widget.validator,
+        decoration: InputDecoration(
+          labelText: widget.label,
+          hintText: widget.hint,
+          helperText: widget.helper,
+          prefixIcon:
+              widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
+          prefixText: widget.prefixText,
+          suffixIcon: canObscure
+              ? IconButton(
+                  icon: Icon(
+                    _obscured
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _obscured = !_obscured),
+                )
+              : (widget.suffixIcon != null ? Icon(widget.suffixIcon) : null),
+          suffixText: widget.suffixText,
+        ),
       ),
     );
   }

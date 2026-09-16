@@ -15,13 +15,13 @@ class NotificationRepository {
 
   /// Unread count for the badge (current user; null = all showrooms).
   Future<int> unreadCount({String? showroomId}) async {
-    var builder = supabase
+    dynamic builder = supabase
         .table(_table)
-        .select('*', count: CountOption.exact)
+        .select('*')
         .eq('is_read', false);
     if (showroomId != null) builder = builder.eq('showroom_id', showroomId);
     try {
-      final dynamic result = await builder;
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final dynamic count = result.count;
       return SafeJson.asIntOr(count, 0);
@@ -35,17 +35,15 @@ class NotificationRepository {
     PageQuery query, {
     bool unreadOnly = false,
   }) async {
-    var builder = supabase
-        .table(_table)
-        .select('*', count: CountOption.exact)
-        .range(query.offset, query.end);
+    dynamic builder = supabase.table(_table).select('*');
     if (unreadOnly) builder = builder.eq('is_read', false);
     final String? type = SafeJson.asString(query.filters['type']);
     if (type != null && type.isNotEmpty) {
       builder = builder.eq('notification_type', type);
     }
     builder = builder.order('created_at', ascending: false);
-    final dynamic result = await builder;
+    builder = builder.range(query.offset, query.end);
+    final dynamic result = await (builder).count(CountOption.exact);
     // ignore: avoid_dynamic_calls
     final int total = SafeJson.asIntOr(result.count, 0);
     return PaginatedResponse<NotificationModel>.fromSupabase(

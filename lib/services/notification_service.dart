@@ -76,8 +76,8 @@ class NotificationService {
       // Cold start: the notification the app was launched from.
       final RemoteMessage? launch = await messaging.getInitialMessage();
       if (launch != null) _onOpened(launch);
-      _foregroundSub = messaging.onMessage.listen(_onForeground);
-      _openedSub = messaging.onMessageOpenedApp.listen(_onOpened);
+      _foregroundSub = FirebaseMessaging.onMessage.listen(_onForeground);
+      _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_onOpened);
       AppLogger.info('FCM', 'initialized');
     } catch (e) {
       AppLogger.warning('FCM', 'init failed (push unavailable)', error: e);

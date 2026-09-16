@@ -60,7 +60,7 @@ class ReportView extends GetView<ReportViewController> {
               label: 'Refresh',
               icon: Icons.refresh,
               variant: AppButtonVariant.outlined,
-              onPressed: controller.isLoading
+              onPressed: controller.isLoading.value
                   ? null
                   : controller.refresh,
             )),

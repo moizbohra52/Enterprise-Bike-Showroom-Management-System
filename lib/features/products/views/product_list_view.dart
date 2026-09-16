@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/core/constants/permission_constants.dar
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/products/controllers/product_controller.dart';
 import 'package:enterprise_bike_showroom/features/products/models/product_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Product (bike) catalog list.
 class ProductListView extends GetView<ProductController> {
@@ -25,7 +26,7 @@ class ProductListView extends GetView<ProductController> {
     return AppShell(
       title: 'Products',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.productsCreate,
           child: AppButton(
             label: 'Add Product',

@@ -21,7 +21,7 @@ class AttachmentController extends BaseListController<AttachmentModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
@@ -73,7 +73,7 @@ class AuditController extends BaseListController<AuditLogModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

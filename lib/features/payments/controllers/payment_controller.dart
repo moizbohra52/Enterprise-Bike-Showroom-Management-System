@@ -13,7 +13,7 @@ class PaymentController extends BaseListController<PaymentModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

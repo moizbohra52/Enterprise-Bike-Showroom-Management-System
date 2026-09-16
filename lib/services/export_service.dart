@@ -25,7 +25,7 @@ class ExportService {
       columns,
       ...rows,
     ];
-    return Csv().encode(all);
+    return const ListToCsvConverter().convert(all);
   }
 
   /// Builds an Excel workbook (first sheet named [sheetName]).

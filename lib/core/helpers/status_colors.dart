@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Maps wire status strings to consistent colors/icons used by
 /// [AppStatusChip] and data grids.
@@ -81,7 +82,7 @@ class StatusColors {
     'overdue': Icons.report_problem,
     'rejected': Icons.thumb_down,
     'failed': Icons.error_outline,
-    'reversed': Icons.revert,
+    'reversed': Icons.undo,
     'refunded': Icons.currency_exchange,
     'expired': Icons.event_busy,
     'expiring_soon': Icons.warning_amber,

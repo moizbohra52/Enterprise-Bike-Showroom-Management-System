@@ -138,7 +138,7 @@ class LoginView extends GetView<AuthController> {
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Icon(Icons.pedals, size: 40, color: Colors.white),
+          child: const Icon(Icons.two_wheeler, size: 40, color: Colors.white),
         ),
         const SizedBox(height: AppSpacing.md),
         Text(AppConfig.appName, style: theme.textTheme.titleLarge),

@@ -49,7 +49,7 @@ class SettingsView extends GetView<AppStateController> {
                     DropdownOption(value: 'hi', label: 'हिन्दी (coming soon)'),
                   ],
                   value: controller.language.value,
-                  onChanged: controller.setLanguage,
+                  onChanged: (String? v) { if (v != null) controller.setLanguage(v); },
                 ),
                 AppDropdown<int>(
                   label: 'Rows per page',
@@ -70,15 +70,20 @@ class SettingsView extends GetView<AppStateController> {
             title: 'Active showroom',
             subtitle: 'All lists and actions apply to this showroom '
                 '(super admins may switch freely).',
-            child: AppDropdown<String?>(
+            child: AppDropdown<String>(
               label: 'Showroom',
               options: <DropdownOption<String>>[
-                for (final s in showrooms.items.value)
-                  DropdownOption<String>(value: s.id, label: s.name),
+                for (final s in showrooms.items)
+                  if (s.id != null)
+                    DropdownOption<String>(value: s.id!, label: s.name),
               ],
-              value: session.activeShowroomId,
+              value: session.activeShowroomId.isEmpty
+                  ? null
+                  : session.activeShowroomId,
               onChanged: session.can(Permissions.showroomEdit)
-                  ? session.setActiveShowroom
+                  ? (String? id) {
+                      if (id != null) session.setActiveShowroom(id);
+                    }
                   : null,
             ),
           ),

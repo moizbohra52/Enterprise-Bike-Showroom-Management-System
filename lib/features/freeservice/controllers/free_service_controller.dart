@@ -16,7 +16,7 @@ class FreeServiceController extends BaseListController<FreeServiceGrantModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
     loadPlans();
   }

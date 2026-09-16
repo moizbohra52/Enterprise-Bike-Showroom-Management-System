@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/billing/controllers/invoice_controller.dart';
 import 'package:enterprise_bike_showroom/features/billing/models/invoice_models.dart';
 import 'package:enterprise_bike_showroom/services/pdf_service.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Invoice document: lines, totals, payment history, PDF, void.
 class InvoiceDetailsView extends GetView<InvoiceDetailsController> {

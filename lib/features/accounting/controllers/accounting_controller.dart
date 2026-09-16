@@ -15,7 +15,7 @@ class AccountController extends BaseListController<AccountModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
@@ -39,7 +39,7 @@ class JournalController extends BaseListController<JournalEntryModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }
@@ -104,7 +104,7 @@ class ManualEntryController extends GetxController {
       {String? accountId, String? side, num? amount}) {
     if (index < 0 || index >= lines.value.length) return;
     final JournalLineModel old = lines.value[index];
-    final String? newId = accountId ?? old.accountId;
+    final String newId = accountId ?? old.accountId;
     lines.value[index] = JournalLineModel(
       id: old.id,
       entryId: old.entryId,

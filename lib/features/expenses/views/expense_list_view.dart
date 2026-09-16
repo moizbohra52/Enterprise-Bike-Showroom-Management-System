@@ -16,6 +16,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/expenses/controllers/expense_controller.dart';
 import 'package:enterprise_bike_showroom/features/expenses/models/expense_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Expense register.
 class ExpenseListView extends StatefulWidget {
@@ -36,7 +37,7 @@ class _ExpenseListViewState extends State<ExpenseListView> {
     return AppShell(
       title: 'Expenses',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.expensesCreate,
           child: AppButton(
             label: 'New Expense',
@@ -174,5 +175,5 @@ class _ExpenseListViewState extends State<ExpenseListView> {
   }
 
   void _new() =>
-      Get.toNamed(AppRoutes.expenseForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.expenseForm)?.then((_) => controller.refresh());
 }

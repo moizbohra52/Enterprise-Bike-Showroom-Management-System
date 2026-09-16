@@ -15,10 +15,9 @@ class AttachmentRepository {
 
   Future<PaginatedResponse<AttachmentModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('attachments')
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -37,7 +36,8 @@ class AttachmentRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<AttachmentModel>.fromSupabase(
@@ -87,10 +87,9 @@ class AuditRepository {
 
   Future<PaginatedResponse<AuditLogModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('audit_log')
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -107,7 +106,8 @@ class AuditRepository {
         builder = builder.eq('entity_type', entityType);
       }
       builder = builder.order('created_at', ascending: false);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<AuditLogModel>.fromSupabase(

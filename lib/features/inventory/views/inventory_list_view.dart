@@ -13,6 +13,7 @@ import 'package:enterprise_bike_showroom/core/constants/permission_constants.dar
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/inventory/controllers/inventory_controller.dart';
 import 'package:enterprise_bike_showroom/features/inventory/models/inventory_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Inventory list with status/product filters.
 class InventoryListView extends GetView<InventoryController> {
@@ -23,7 +24,7 @@ class InventoryListView extends GetView<InventoryController> {
     return AppShell(
       title: 'Inventory',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.inventoryCreate,
           child: AppButton(
             label: 'Stock In',
@@ -32,7 +33,7 @@ class InventoryListView extends GetView<InventoryController> {
           ),
         ),
         const SizedBox(width: 8),
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.inventoryTransfer,
           child: AppButton(
             label: 'Transfer',

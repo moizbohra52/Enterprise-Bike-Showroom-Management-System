@@ -12,6 +12,7 @@ import 'package:enterprise_bike_showroom/core/utils/safe_json.dart';
 import 'package:enterprise_bike_showroom/features/service/controllers/service_controller.dart';
 import 'package:enterprise_bike_showroom/features/service/models/service_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// New job card: vehicle → items → open.
 class ServiceFormView extends GetView<ServiceFormController> {

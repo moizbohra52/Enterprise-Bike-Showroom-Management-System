@@ -7,6 +7,7 @@ import 'package:enterprise_bike_showroom/common/widgets/app_loader.dart';
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/accounting/controllers/accounting_controller.dart';
 import 'package:enterprise_bike_showroom/features/accounting/models/accounting_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Journal entry detail (debit / credit lines).
 class JournalDetailsView extends GetView<JournalDetailsController> {

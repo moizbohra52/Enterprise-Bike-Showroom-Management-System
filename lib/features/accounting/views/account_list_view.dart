@@ -16,6 +16,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/accounting/controllers/accounting_controller.dart';
 import 'package:enterprise_bike_showroom/features/accounting/models/accounting_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Chart of accounts.
 class AccountListView extends GetView<AccountController> {
@@ -26,7 +27,7 @@ class AccountListView extends GetView<AccountController> {
     return AppShell(
       title: 'Accounts',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.accountingCreate,
           child: AppButton(
             label: 'New Account',
@@ -128,7 +129,7 @@ class AccountListView extends GetView<AccountController> {
   }
 
   void _newAccount() =>
-      Get.toNamed(AppRoutes.accountForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.accountForm)?.then((_) => controller.refresh());
 
   Future<void> _ledger(AccountModel account) async {
     await showModalBottomSheet<void>(

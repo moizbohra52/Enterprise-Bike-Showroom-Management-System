@@ -16,6 +16,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/payments/controllers/payment_controller.dart';
 import 'package:enterprise_bike_showroom/features/payments/models/payment_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Payment register.
 class PaymentListView extends StatefulWidget {
@@ -36,7 +37,7 @@ class _PaymentListViewState extends State<PaymentListView> {
     return AppShell(
       title: 'Payments',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.paymentsCreate,
           child: AppButton(
             label: 'New Payment',
@@ -175,5 +176,5 @@ class _PaymentListViewState extends State<PaymentListView> {
   }
 
   void _new() =>
-      Get.toNamed(AppRoutes.paymentForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.paymentForm)?.then((_) => controller.refresh());
 }
