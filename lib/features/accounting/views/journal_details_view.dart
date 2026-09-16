@@ -30,7 +30,7 @@ class JournalDetailsView extends GetView<JournalDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.entry.value!),
+          child: _body(context, controller.entry.value!),
         );
       }),
     );
@@ -45,7 +45,7 @@ class JournalDetailsView extends GetView<JournalDetailsController> {
     return null;
   }
 
-  Widget _body(JournalEntryModel entry) {
+  Widget _body(BuildContext context, JournalEntryModel entry) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

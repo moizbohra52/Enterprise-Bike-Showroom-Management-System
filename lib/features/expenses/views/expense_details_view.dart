@@ -48,13 +48,13 @@ class ExpenseDetailsView extends GetView<ExpenseDetailsController> {
                 label: 'Reject',
                 icon: Icons.cancel_outlined,
                 variant: AppButtonVariant.danger,
-                onPressed: _reject,
+                onPressed: () => _reject(context),
               ),
               const SizedBox(width: 8),
               AppButton(
                 label: 'Approve',
                 icon: Icons.check_circle_outline,
-                onPressed: _approve,
+                onPressed: () => _approve(context),
               ),
             ],
           );
@@ -66,7 +66,7 @@ class ExpenseDetailsView extends GetView<ExpenseDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.expense.value!),
+          child: _body(context, controller.expense.value!),
         );
       }),
     );
@@ -81,12 +81,12 @@ class ExpenseDetailsView extends GetView<ExpenseDetailsController> {
     return null;
   }
 
-  Future<void> _approve() async {
+  Future<void> _approve(BuildContext context) async {
     final bool ok = await controller.approve();
     if (ok) AppSnackbar.success(context, 'Expense approved');
   }
 
-  Future<void> _reject() async {
+  Future<void> _reject(BuildContext context) async {
     final String? reason = await AppDialog.prompt(
       context,
       title: 'Reject expense',
@@ -98,7 +98,7 @@ class ExpenseDetailsView extends GetView<ExpenseDetailsController> {
     if (ok) AppSnackbar.success(context, 'Expense rejected');
   }
 
-  Widget _body(ExpenseModel expense) {
+  Widget _body(BuildContext context, ExpenseModel expense) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

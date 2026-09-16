@@ -139,7 +139,7 @@ class FreeServiceView extends GetView<FreeServiceController> {
                 ),
               ),
               const SizedBox(height: 12),
-              Obx(() => _plansCard()),
+              Obx(() => _plansCard(context)),
             ],
           ),
         );
@@ -147,7 +147,7 @@ class FreeServiceView extends GetView<FreeServiceController> {
     );
   }
 
-  Widget _plansCard() {
+  Widget _plansCard(BuildContext context) {
     final List<FreeServicePlanModel> plans = controller.plans.value;
     return AppCard(
       title: 'Free-service plans',

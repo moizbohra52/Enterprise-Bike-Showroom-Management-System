@@ -32,7 +32,7 @@ class InsuranceDetailsView extends GetView<InsuranceDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.policy.value!),
+          child: _body(context, controller.policy.value!),
         );
       }),
     );
@@ -47,7 +47,7 @@ class InsuranceDetailsView extends GetView<InsuranceDetailsController> {
     return null;
   }
 
-  Widget _body(InsurancePolicyModel policy) {
+  Widget _body(BuildContext context, InsurancePolicyModel policy) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

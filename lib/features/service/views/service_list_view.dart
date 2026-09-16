@@ -87,7 +87,7 @@ class ServiceListView extends GetView<ServiceController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<ServiceRecordModel>(
                     items: controller.items.value,

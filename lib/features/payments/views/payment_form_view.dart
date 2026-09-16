@@ -14,7 +14,9 @@ import 'package:enterprise_bike_showroom/routes/app_routes.dart';
 
 /// Record a payment against an invoice.
 class PaymentFormView extends GetView<PaymentFormController> {
-  const PaymentFormView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  PaymentFormView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,11 @@ class PaymentFormView extends GetView<PaymentFormController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Record Payment',
             icon: Icons.check_circle_outline,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -96,7 +98,7 @@ class PaymentFormView extends GetView<PaymentFormController> {
                       ],
                     ),
                     Obx(
-                      child: controller.invoiceId.value.isEmpty
+                      () => controller.invoiceId.value.isEmpty
                           ? const SizedBox.shrink()
                           : Padding(
                               padding: const EdgeInsets.only(top: 12),
@@ -167,7 +169,7 @@ class PaymentFormView extends GetView<PaymentFormController> {
   final TextEditingController _referenceField = TextEditingController();
   final TextEditingController _notesField = TextEditingController();
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit();
     if (ok) {
       AppSnackbar.success(context, 'Payment recorded');

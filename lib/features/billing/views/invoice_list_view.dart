@@ -98,7 +98,7 @@ class _InvoiceListViewState extends State<InvoiceListView> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<InvoiceModel>(
                     items: controller.items.value,

@@ -117,7 +117,7 @@ class _SaleListViewState extends State<SaleListView> {
           const SizedBox(height: 12),
           Expanded(
             child: Obx(
-              child: AppCard(
+              () => AppCard(
                 padding: 8,
                 child: AppTable<SaleModel>(
                   items: controller.items.value,

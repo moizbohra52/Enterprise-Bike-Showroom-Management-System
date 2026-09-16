@@ -24,7 +24,9 @@ import 'package:enterprise_bike_showroom/services/image_service.dart';
 
 /// Add / edit product with colors + images.
 class ProductFormView extends GetView<ProductController> {
-  const ProductFormView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  ProductFormView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +38,11 @@ class ProductFormView extends GetView<ProductController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: isEdit ? 'Save Changes' : 'Create Product',
             icon: Icons.save_outlined,
-            isLoading: _saving,
-            onPressed: _saving ? null : () => _submit(isEdit, id),
+            isLoading: _saving.value,
+            onPressed: _saving.value ? null : () => _submit(context, isEdit, id),
           ),
         ),
       ],
@@ -50,7 +52,7 @@ class ProductFormView extends GetView<ProductController> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const AppLoader();
           }
-          return _form();
+          return _form(context);
         },
       ),
     );
@@ -109,7 +111,7 @@ class ProductFormView extends GetView<ProductController> {
     }
   }
 
-  Widget _form() {
+  Widget _form(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -263,7 +265,7 @@ class ProductFormView extends GetView<ProductController> {
                   icon: Icons.add_photo_alternate_outlined,
                   variant: AppButtonVariant.outlined,
                   size: AppButtonSize.small,
-                  onPressed: _pickImages,
+                  onPressed: () => _pickImages(context),
                 ),
               ],
               child: Wrap(
@@ -349,7 +351,7 @@ class ProductFormView extends GetView<ProductController> {
     );
   }
 
-  Future<void> _pickImages() async {
+  Future<void> _pickImages(BuildContext context) async {
     try {
       final List<XFile>? images =
           await _picker.pickMultiImage(imageQuality: 85);
@@ -364,7 +366,7 @@ class ProductFormView extends GetView<ProductController> {
     }
   }
 
-  Future<void> _submit(bool isEdit, String? id) async {
+  Future<void> _submit(BuildContext context, bool isEdit, String? id) async {
     if (!_formKey.currentState!.validate()) return;
     if (_brandId == null) {
       AppSnackbar.error(context, 'Please select a brand.');

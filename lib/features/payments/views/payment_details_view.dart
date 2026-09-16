@@ -46,7 +46,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
                 label: 'Receipt',
                 icon: Icons.receipt_long,
                 variant: AppButtonVariant.outlined,
-                onPressed: () => _receipt(payment),
+                onPressed: () => _receipt(context, payment),
               ),
               const SizedBox(width: 8),
               if (session.can(Permissions.paymentsCancel))
@@ -54,7 +54,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
                   label: 'Refund',
                   icon: Icons.undo,
                   variant: AppButtonVariant.danger,
-                  onPressed: () => _confirmRefund(payment),
+                  onPressed: () => _confirmRefund(context, payment),
                 ),
             ],
           );
@@ -66,7 +66,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.payment.value!),
+          child: _body(context, controller.payment.value!),
         );
       }),
     );
@@ -81,7 +81,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
     return null;
   }
 
-  Future<void> _receipt(PaymentModel payment) async {
+  Future<void> _receipt(BuildContext context, PaymentModel payment) async {
     final PdfService pdf = Get.find<PdfService>();
     try {
       final String path = await pdf.paymentReceiptPdf(PaymentReceiptData(
@@ -99,7 +99,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
     }
   }
 
-  Future<void> _confirmRefund(PaymentModel payment) async {
+  Future<void> _confirmRefund(BuildContext context, PaymentModel payment) async {
     final String? reason = await AppDialog.prompt(
       context,
       title: 'Refund ${payment.paymentNumber}',
@@ -113,7 +113,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
     if (ok) AppSnackbar.success(context, 'Payment refunded');
   }
 
-  Widget _body(PaymentModel payment) {
+  Widget _body(BuildContext context, PaymentModel payment) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

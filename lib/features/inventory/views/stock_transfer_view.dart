@@ -22,7 +22,9 @@ import 'package:enterprise_bike_showroom/features/inventory/repositories/invento
 
 /// Transfer bikes between showrooms (select available bikes).
 class StockTransferView extends GetView<InventoryController> {
-  const StockTransferView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  StockTransferView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +34,11 @@ class StockTransferView extends GetView<InventoryController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Transfer',
             icon: Icons.swap_horiz,
-            isLoading: saving,
-            onPressed: saving ? null : _submit,
+            isLoading: saving.value,
+            onPressed: saving.value ? null : () => _submit(context),
           ),
         ),
       ],
@@ -76,7 +78,7 @@ class StockTransferView extends GetView<InventoryController> {
                   children: <Widget>[
                     Expanded(
                       child: Obx(
-                        child: AppDropdown<String?>(
+                        () => AppDropdown<String?>(
                           label: 'To Showroom *',
                           options: <DropdownOption<String?>>[
                             const DropdownOption<String?>(
@@ -189,7 +191,7 @@ class StockTransferView extends GetView<InventoryController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     if (_targetShowroomId == null) {
       AppSnackbar.error(context, 'Select the destination showroom.');
       return;

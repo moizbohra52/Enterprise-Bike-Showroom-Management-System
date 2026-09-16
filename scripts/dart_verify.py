@@ -683,6 +683,7 @@ class Project:
                 if not mm:
                     continue
                 pname = mm.group(1)
+                ptype = ''                # taken from the field itself
                 nullable = True           # judged from the field, check 6 does it
             else:
                 mm = re.search(r'(' + IDENT + r')\s*$', head)
@@ -693,7 +694,8 @@ class Project:
                 nullable = (not ptype) or ptype in ('dynamic', 'var') or ptype.endswith('?') \
                     or bool(re.fullmatch(r'[A-Z]', ptype))
             entry = dict(name=pname, required=req and not has_default,
-                         default=has_default, nullable=nullable, this=head.startswith('this.'))
+                         default=has_default, nullable=nullable, type=ptype.strip(),
+                         this=head.startswith('this.'))
             if md == 'named':
                 named.append(entry)
                 if entry['required']:

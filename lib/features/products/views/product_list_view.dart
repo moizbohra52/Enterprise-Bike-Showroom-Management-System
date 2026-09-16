@@ -59,7 +59,7 @@ class ProductListView extends GetView<ProductController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Obx(
-                    child: AppDropdown<String?>(
+                    () => AppDropdown<String?>(
                       options: controller.brandOptions,
                       value: controller.state.filters['brand_id'] as String?,
                       onChanged: controller.applyBrandFilter,
@@ -72,7 +72,7 @@ class ProductListView extends GetView<ProductController> {
           const SizedBox(height: 12),
           Expanded(
             child: Obx(
-              child: AppCard(
+              () => AppCard(
                 padding: 8,
                 child: AppTable<ProductModel>(
                   items: controller.items.value,

@@ -88,7 +88,7 @@ class UsersView extends GetView<UsersController> {
             child: Obx(
               () => AppTable<UserModel>(
                 columns: _columns,
-                items: controller.items,
+                items: controller.items.value,
                 keyOf: (UserModel user) => user.id ?? '',
                 info: controller.pageInfo.value,
                 isLoading: controller.isLoading.value,

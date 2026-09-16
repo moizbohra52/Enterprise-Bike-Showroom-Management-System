@@ -29,11 +29,11 @@ class PurchaseFormView extends GetView<PurchaseFormController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Create Purchase',
             icon: Icons.check_circle_outline,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -79,7 +79,7 @@ class PurchaseFormView extends GetView<PurchaseFormController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit();
     if (ok) {
       AppSnackbar.success(context, 'Purchase created');
@@ -293,7 +293,7 @@ class _TotalsCard extends GetView<PurchaseFormController> {
           ),
           const SizedBox(width: 12),
           Obx(
-            child: SizedBox(
+            () => SizedBox(
               width: 160,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,

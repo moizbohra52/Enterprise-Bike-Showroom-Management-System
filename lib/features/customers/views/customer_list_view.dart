@@ -92,7 +92,7 @@ class CustomerListView extends GetView<CustomerController> {
           const SizedBox(height: 12),
           Expanded(
             child: Obx(
-              child: AppCard(
+              () => AppCard(
                 padding: 8,
                 child: AppTable<CustomerModel>(
                   items: controller.items.value,

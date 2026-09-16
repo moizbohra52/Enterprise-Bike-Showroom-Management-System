@@ -46,7 +46,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
                   label: 'Receive Stock',
                   icon: Icons.inventory_2_outlined,
                   variant: AppButtonVariant.outlined,
-                  onPressed: _receive,
+                  onPressed: () => _receive(context),
                 ),
               if (session.can(Permissions.purchasesEdit) &&
                   purchase.outstandingAmount > 0) ...<Widget>[
@@ -67,7 +67,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.purchase.value!),
+          child: _body(context, controller.purchase.value!),
         );
       }),
     );
@@ -82,7 +82,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
     return null;
   }
 
-  Future<void> _receive() async {
+  Future<void> _receive(BuildContext context) async {
     final PurchaseModel purchase = controller.purchase.value!;
     final bool confirmed = await AppDialog.confirm(
       context,
@@ -133,7 +133,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
     if (ok) AppSnackbar.success(context, 'Payment recorded');
   }
 
-  Widget _body(PurchaseModel purchase) {
+  Widget _body(BuildContext context, PurchaseModel purchase) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

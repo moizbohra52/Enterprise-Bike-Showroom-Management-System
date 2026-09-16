@@ -31,11 +31,11 @@ class ExpenseFormView extends GetView<ExpenseFormController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Save Expense',
             icon: Icons.save_outlined,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -212,7 +212,7 @@ class ExpenseFormView extends GetView<ExpenseFormController> {
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit();
     if (ok) {
       AppSnackbar.success(context, 'Expense saved');

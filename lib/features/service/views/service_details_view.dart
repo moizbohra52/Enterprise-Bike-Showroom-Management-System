@@ -46,7 +46,7 @@ class ServiceDetailsView extends GetView<ServiceDetailsController> {
                 AppButton(
                   label: 'Complete & Deliver',
                   icon: Icons.check_circle_outline,
-                  onPressed: _complete,
+                  onPressed: () => _complete(context),
                 ),
             ],
           );
@@ -58,7 +58,7 @@ class ServiceDetailsView extends GetView<ServiceDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.service.value!),
+          child: _body(context, controller.service.value!),
         );
       }),
     );
@@ -73,7 +73,7 @@ class ServiceDetailsView extends GetView<ServiceDetailsController> {
     return null;
   }
 
-  Future<void> _complete() async {
+  Future<void> _complete(BuildContext context) async {
     final ServiceRecordModel service = controller.service.value!;
     final num? odIn = service.odometerIn;
     final String? od = await AppDialog.prompt(
@@ -100,7 +100,7 @@ class ServiceDetailsView extends GetView<ServiceDetailsController> {
     if (ok) AppSnackbar.success(context, 'Vehicle delivered');
   }
 
-  Widget _body(ServiceRecordModel service) {
+  Widget _body(BuildContext context, ServiceRecordModel service) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

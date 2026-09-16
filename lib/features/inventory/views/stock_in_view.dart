@@ -19,7 +19,9 @@ import 'package:enterprise_bike_showroom/features/products/controllers/product_c
 
 /// Stock-in: add a physical bike to inventory.
 class StockInView extends GetView<InventoryController> {
-  const StockInView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  StockInView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,11 @@ class StockInView extends GetView<InventoryController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Add to Stock',
             icon: Icons.check,
-            isLoading: saving,
-            onPressed: saving ? null : _submit,
+            isLoading: saving.value,
+            onPressed: saving.value ? null : () => _submit(context),
           ),
         ),
       ],
@@ -92,7 +94,7 @@ class StockInView extends GetView<InventoryController> {
                     ),
                     const SizedBox(height: 12),
                     Obx(
-                      child: AppDropdown<String?>(
+                      () => AppDropdown<String?>(
                         label: 'Color',
                         options: _colorOptions,
                         value: _colorId,
@@ -199,7 +201,7 @@ class StockInView extends GetView<InventoryController> {
     ];
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
     if (_productId == null) {
       AppSnackbar.error(context, 'Please select a product.');

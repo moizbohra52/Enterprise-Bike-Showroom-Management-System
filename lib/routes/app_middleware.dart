@@ -10,7 +10,7 @@ import 'package:get/get.dart';
 /// the persisted session.
 class AuthMiddleware extends GetMiddleware {
   @override
-  int? get priority => 1;
+  int get priority => 1;
 
   @override
   RouteSettings? redirect(String? route) {
@@ -33,7 +33,7 @@ class PermissionMiddleware extends GetMiddleware {
   final String permission;
 
   @override
-  int? get priority => 2;
+  int get priority => 2;
 
   @override
   RouteSettings? redirect(String? route) {
