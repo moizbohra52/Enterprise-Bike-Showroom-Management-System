@@ -59,35 +59,39 @@ jobs:
           set -e
           exit $status
 
-      # The Actions log viewer is not always reachable from every environment,
-      # so a failing analysis is also published where it can be read by API.
+      # The Actions log and artifact endpoints are not reachable from every
+      # environment, so a failing analysis is also published as a PR comment,
+      # which is readable through api.github.com alone.
       - name: Report errors on the pull request
         if: failure() && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          errors=$(grep -cE '^[[:space:]]*error[[:space:]]' analyze.txt || true)
-          warnings=$(grep -cE '^[[:space:]]*warning[[:space:]]' analyze.txt || true)
+          set +e
+          error_count=$(grep -cE '^[[:space:]]*error' analyze.txt)
+          warn_count=$(grep -cE '^[[:space:]]*warning' analyze.txt)
           {
-            echo '### `flutter analyze` — CI run '"$GITHUB_RUN_ID"
+            echo "### flutter analyze - run $GITHUB_RUN_ID"
             echo
-            echo "**'"$errors"' error line(s)**, '"$warnings"' warning line(s).'
-            echo
-            echo '```'
-            grep -E '^[[:space:]]*error[[:space:]]' analyze.txt | head -250
-            echo '```'
-            echo
-            echo '<details><summary>full output (tail)</summary>'
+            echo "**$error_count error line(s), $warn_count warning line(s).**"
             echo
             echo '```'
-            tail -60 analyze.txt
+            grep -E '^[[:space:]]*error' analyze.txt | head -300
+            echo '```'
+            echo
+            echo '<details><summary>tail of the full output</summary>'
+            echo
+            echo '```'
+            tail -40 analyze.txt
             echo '```'
             echo
             echo '</details>'
           } > report.md
-          head -c 60000 report.md > report_trim.md
-          gh pr comment "$PR_NUMBER" --body-file report_trim.md
+          python3 -c "import json; json.dump({'body': open('report.md', encoding='utf-8').read()[:60000]}, open('comment.json', 'w', encoding='utf-8'))"
+          gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments" --input comment.json
+          echo "posted $error_count error lines to PR $PR_NUMBER"
 
       - name: Upload analyze output
         if: always()
