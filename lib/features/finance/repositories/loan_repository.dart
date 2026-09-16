@@ -69,7 +69,7 @@ class LoanRepository {
           .eq('loan_id', loanId)
           .order('installment_no');
       return <EmiScheduleModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) EmiScheduleModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

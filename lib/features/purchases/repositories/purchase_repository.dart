@@ -102,7 +102,7 @@ class PurchaseRepository {
           .order('name')
           .limit(200);
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {

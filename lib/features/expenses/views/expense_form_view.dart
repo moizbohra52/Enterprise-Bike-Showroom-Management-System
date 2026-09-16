@@ -54,7 +54,8 @@ class ExpenseFormView extends GetView<ExpenseFormController> {
                       label: 'Category',
                       options: <DropdownOption<String>>[
                         for (final c in controller.categories.value)
-                          DropdownOption<String>(value: c.id, label: c.name),
+                          if (c.id != null)
+                            DropdownOption<String>(value: c.id!, label: c.name),
                       ],
                       value: controller.categoryId.value,
                       onChanged: (String? value) =>

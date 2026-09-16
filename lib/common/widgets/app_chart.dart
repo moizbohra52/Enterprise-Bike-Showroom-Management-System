@@ -198,10 +198,10 @@ class AppBarChart extends StatelessWidget {
           ),
           borderData: FlBorderData(show: false),
           maxY: maxY * 1.15,
-          barTouchData: const BarTouchData(enabled: true),
+          barTouchData: BarTouchData(enabled: true),
           barGroups: <BarChartGroupData>[
             for (int i = 0; i < _maxPoints(); i++)
-              BarChartGroupData(x: i.toDouble(), barRods: <BarChartRodData>[
+              BarChartGroupData(x: i, barRods: <BarChartRodData>[
                 for (final ChartSeries s in series)
                   if (i < s.points.length)
                     BarChartRodData(

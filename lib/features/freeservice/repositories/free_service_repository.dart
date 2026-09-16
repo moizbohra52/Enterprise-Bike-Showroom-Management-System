@@ -23,7 +23,7 @@ class FreeServiceRepository {
           .eq('is_active', true)
           .order('name');
       return <FreeServicePlanModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) FreeServicePlanModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {
@@ -75,7 +75,7 @@ class FreeServiceRepository {
           .eq('vehicle_id', vehicleId)
           .order('created_at', ascending: false);
       return <FreeServiceGrantModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) FreeServiceGrantModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

@@ -51,7 +51,7 @@ class ShowroomRepository {
       final dynamic rows =
           await supabase.table(_table).select().eq('status', 'active').order('name');
       return <ShowroomModel>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) ShowroomModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {

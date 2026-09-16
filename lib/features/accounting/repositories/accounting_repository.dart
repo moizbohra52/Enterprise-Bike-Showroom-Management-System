@@ -51,7 +51,7 @@ class AccountingRepository {
           .eq('status', 'active')
           .order('code');
       return <AccountModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) AccountModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

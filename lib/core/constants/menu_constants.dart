@@ -160,7 +160,7 @@ class AppMenu {
     AppMenuItem(
       id: 'free-service',
       label: 'Free Service',
-      icon: Icons.vacuum_cleaner_outlined,
+      icon: Icons.card_giftcard_outlined,
       route: '/free-service',
       permission: Permissions.serviceView,
       group: 'service',

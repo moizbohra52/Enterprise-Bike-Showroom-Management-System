@@ -27,7 +27,7 @@ class ProductRepository {
           .eq('status', 'active')
           .order('name');
       return <BrandModel>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) BrandModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -188,7 +188,7 @@ class ProductRepository {
           .eq('product_id', productId)
           .order('service_number');
       return <Map<String, dynamic>>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) SafeJson.asMap(r),
       ];
     } catch (e) {

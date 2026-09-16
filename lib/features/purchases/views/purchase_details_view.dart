@@ -55,7 +55,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
                 AppButton(
                   label: 'Pay Supplier',
                   icon: Icons.payments_outlined,
-                  onPressed: _pay,
+                  onPressed: () => _pay(context),
                 ),
               ],
             ],

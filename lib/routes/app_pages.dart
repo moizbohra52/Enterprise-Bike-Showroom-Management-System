@@ -135,7 +135,9 @@ class AppPages {
       name: name,
       page: page,
       binding: binding,
-      middlewares: middlewares ?? const <GetMiddleware>[],
+      // GetX sorts this list in place (MiddlewareRunner._getMiddlewares), so
+      // it must be growable — a const list throws UnsupportedError.
+      middlewares: middlewares ?? <GetMiddleware>[],
     );
   }
 

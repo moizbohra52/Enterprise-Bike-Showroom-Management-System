@@ -182,7 +182,7 @@ class SaleRepository {
     builder = builder.order('name').limit(50);
     final dynamic rows = await builder;
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows));
+      for (final dynamic row in SafeJson.asList(rows))
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -196,7 +196,7 @@ class SaleRepository {
         .eq('is_active', true)
         .order('sort_order');
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows));
+      for (final dynamic row in SafeJson.asList(rows))
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -211,7 +211,7 @@ class SaleRepository {
         .order('created_at', ascending: false)
         .limit(200);
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows));
+      for (final dynamic row in SafeJson.asList(rows))
         if (row is Map) SafeJson.asMap(row),
     ];
   }
@@ -226,7 +226,7 @@ class SaleRepository {
         .eq('is_active', true)
         .order('sort_order');
     return <Map<String, dynamic>>[
-      for (final dynamic row in SafeJson.asList(rows));
+      for (final dynamic row in SafeJson.asList(rows))
         if (row is Map) SafeJson.asMap(row),
     ];
   }

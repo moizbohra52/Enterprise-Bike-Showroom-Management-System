@@ -129,7 +129,7 @@ class CustomerRepository {
           .eq('customer_id', customerId)
           .order('created_at', ascending: false);
       return <CustomerVehicleModel>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) CustomerVehicleModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -175,7 +175,7 @@ class CustomerRepository {
     }
     final dynamic rows = await builder;
     return <Map<String, dynamic>>[
-      for (final dynamic r in SafeJson.asList(rows));
+      for (final dynamic r in SafeJson.asList(rows))
         if (r is Map) SafeJson.asMap(r),
     ];
   }

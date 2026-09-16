@@ -158,7 +158,7 @@ class ServiceRepository {
           .order('name')
           .limit(100);
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {
@@ -195,7 +195,7 @@ class ServiceRepository {
           .eq('customer_id', customerId)
           .eq('status', 'active');
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {

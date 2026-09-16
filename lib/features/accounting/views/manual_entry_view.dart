@@ -184,8 +184,9 @@ class _LineRow extends GetView<ManualEntryController> {
                   label: 'Account',
                   options: <DropdownOption<String>>[
                     for (final a in controller.accounts.value)
-                      DropdownOption<String>(
-                          value: a.id, label: '${a.code} — ${a.name}'),
+                      if (a.id != null)
+                        DropdownOption<String>(
+                            value: a.id!, label: '${a.code} — ${a.name}'),
                   ],
                   value: line.accountId.isEmpty ? null : line.accountId,
                   onChanged: (String? value) =>

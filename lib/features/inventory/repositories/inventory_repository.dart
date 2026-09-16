@@ -131,7 +131,7 @@ class InventoryRepository {
           .order('created_at', ascending: false)
           .limit(100);
       return <StockHistoryModel>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) StockHistoryModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -147,7 +147,7 @@ class InventoryRepository {
           .order('created_at', ascending: false)
           .limit(limit);
       return <StockTransferModel>[
-        for (final dynamic r in SafeJson.asList(rows));
+        for (final dynamic r in SafeJson.asList(rows))
           if (r is Map) StockTransferModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {

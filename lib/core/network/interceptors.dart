@@ -100,7 +100,7 @@ class ErrorInterceptor extends Interceptor {
           try {
             // handler.resolve() takes a Response, not a Future<Response>.
             final Response<dynamic> retry =
-                await Dio(options: BaseOptions()).fetch<dynamic>(
+                await Dio().fetch<dynamic>(
               err.requestOptions,
             );
             _attempts.remove(key);

@@ -12,6 +12,7 @@ import 'package:enterprise_bike_showroom/common/models/dropdown_option.dart';
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/freeservice/controllers/free_service_controller.dart';
 import 'package:enterprise_bike_showroom/features/freeservice/models/free_service_models.dart';
+import 'package:enterprise_bike_showroom/features/service/models/service_models.dart';
 
 /// Free-service dashboard: grants + plans.
 class FreeServiceView extends GetView<FreeServiceController> {

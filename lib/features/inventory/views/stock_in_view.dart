@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/core/validators/validators.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:enterprise_bike_showroom/features/inventory/controllers/inventory_controller.dart';
 import 'package:enterprise_bike_showroom/features/inventory/repositories/inventory_repository.dart';
+import 'package:enterprise_bike_showroom/features/inventory/models/inventory_models.dart';
 import 'package:enterprise_bike_showroom/features/products/controllers/product_controller.dart';
 
 /// Stock-in: add a physical bike to inventory.

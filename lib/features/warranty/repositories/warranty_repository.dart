@@ -73,7 +73,7 @@ class WarrantyRepository {
           .eq('vehicle_id', vehicleId)
           .order('created_at', ascending: false);
       return <WarrantyModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) WarrantyModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {
@@ -90,7 +90,7 @@ class WarrantyRepository {
           .eq('warranty_id', warrantyId)
           .order('created_at', ascending: false);
       return <WarrantyClaimModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) WarrantyClaimModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

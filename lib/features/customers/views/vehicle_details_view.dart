@@ -54,7 +54,7 @@ class VehicleDetailsView extends GetView<VehicleDetailsController> {
             children: <Widget>[
               _VehicleHeader(vehicle: v),
               const SizedBox(height: 12),
-              _VehicleKpis(vehicle: v),
+              _VehicleKpis(),
               const SizedBox(height: 12),
               _SectionCard(
                 title: 'Service History',

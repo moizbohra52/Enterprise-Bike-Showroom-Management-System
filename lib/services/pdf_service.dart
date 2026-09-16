@@ -160,7 +160,7 @@ class PdfService {
                     children: <pw.Widget>[
                       _label('BILL TO'),
                       pw.Text(data.customerName,
-                          style: const pw.TextStyle(
+                          style: pw.TextStyle(
                               fontSize: 12, fontWeight: pw.FontWeight.bold)),
                       if (data.customerAddress.isNotEmpty)
                         pw.Text(data.customerAddress,
@@ -228,7 +228,7 @@ class PdfService {
                         _cell(AppFormatters.amount(item.discount)),
                         _cell('${item.taxRate.toStringAsFixed(1)}'),
                         _cell(AppFormatters.amount(item.totalAmount),
-                            align: pw.Alignment.centerRight),
+                            alignment: pw.Alignment.centerRight),
                       ],
                     ),
                 ],
@@ -483,7 +483,7 @@ class PdfService {
           color: primary,
           alignment: pw.Alignment.center,
           child: pw.Text('EB',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 16,
                   fontWeight: pw.FontWeight.bold,
                   color: PdfColor.fromInt(0xFFFFFFFF))),
@@ -514,14 +514,20 @@ class PdfService {
   pw.Widget _head(String text) => pw.Padding(
         padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: pw.Text(text,
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
                 fontSize: 8, fontWeight: pw.FontWeight.bold)),
       );
 
-  pw.Widget _cell(String text, {pw.Alignment alignment = pw.Alignment.centerLeft}) {
+  pw.Widget _cell(String text, {pw.Alignment alignment = pw.Alignment.center}) {
+    pw.TextAlign textAlign = pw.TextAlign.center;
+    if (alignment == pw.Alignment.centerRight) {
+      textAlign = pw.TextAlign.right;
+    } else if (alignment == pw.Alignment.centerLeft) {
+      textAlign = pw.TextAlign.left;
+    }
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.center),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9), textAlign: textAlign),
     );
   }
 
@@ -546,7 +552,7 @@ class PdfService {
                 style: const pw.TextStyle(fontSize: 10, color: PdfColor.fromInt(0xFF64748B))),
           ),
           pw.Text(value,
-              style: const pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );

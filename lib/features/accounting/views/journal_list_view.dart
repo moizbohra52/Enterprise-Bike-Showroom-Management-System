@@ -130,5 +130,5 @@ class JournalListView extends GetView<JournalController> {
   }
 
   void _manual() => Get.toNamed(AppRoutes.accountingManualEntry)
-      .then((_) => controller.refresh());
+      ?.then((_) => controller.refresh());
 }

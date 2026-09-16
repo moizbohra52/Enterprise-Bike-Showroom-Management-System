@@ -30,7 +30,7 @@ class ExpenseRepository {
       builder = builder.order('name');
       final dynamic rows = await builder;
       return <ExpenseCategoryModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map)
             ExpenseCategoryModel.fromJson(SafeJson.asMap(row)),
       ];

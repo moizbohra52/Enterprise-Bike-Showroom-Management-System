@@ -105,7 +105,7 @@ class PaginatedResponse<T> {
   final List<T> items;
   final PageInfo info;
 
-  factory PaginatedResponse.fromSupabase<T>(
+  factory PaginatedResponse.fromSupabase(
     List<dynamic> data, {
     required int total,
     required PageQuery query,

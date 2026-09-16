@@ -74,7 +74,7 @@ class InsuranceRepository {
           .eq('vehicle_id', vehicleId)
           .order('created_at', ascending: false);
       return <InsurancePolicyModel>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map)
             InsurancePolicyModel.fromJson(SafeJson.asMap(row)),
       ];
@@ -93,7 +93,7 @@ class InsuranceRepository {
           .order('name')
           .limit(100);
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {
@@ -110,7 +110,7 @@ class InsuranceRepository {
           .eq('customer_id', customerId)
           .eq('status', 'active');
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows));
+        for (final dynamic row in SafeJson.asList(rows))
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {

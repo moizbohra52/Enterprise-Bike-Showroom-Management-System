@@ -45,7 +45,7 @@ class LoanDetailsView extends GetView<LoanDetailsController> {
           return AppButton(
             label: 'Receive EMI',
             icon: Icons.payments_outlined,
-            onPressed: _receiveEmi,
+            onPressed: () => _receiveEmi(context),
           );
         }),
       ],
@@ -104,7 +104,7 @@ class LoanDetailsView extends GetView<LoanDetailsController> {
     return null;
   }
 
-  Future<void> _receiveEmi() async {
+  Future<void> _receiveEmi(BuildContext context) async {
     final LoanModel? loan = controller.loan.value;
     if (loan?.id == null) return;
     final List<EmiScheduleModel> payable = <EmiScheduleModel>[
@@ -138,15 +138,15 @@ class LoanDetailsView extends GetView<LoanDetailsController> {
       context: context,
       builder: (BuildContext context) => SimpleDialog(
         title: const Text('Payment mode'),
-        children: const <Widget>[
+        children: <Widget>[
           SimpleDialogOption(onPressed: () => Get.back(result: 'cash'),
-              child: Text('Cash')),
+              child: const Text('Cash')),
           SimpleDialogOption(onPressed: () => Get.back(result: 'upi'),
-              child: Text('UPI')),
+              child: const Text('UPI')),
           SimpleDialogOption(onPressed: () => Get.back(result: 'cheque'),
-              child: Text('Cheque')),
+              child: const Text('Cheque')),
           SimpleDialogOption(onPressed: () => Get.back(result: 'bank_transfer'),
-              child: Text('Bank Transfer')),
+              child: const Text('Bank Transfer')),
         ],
       ),
     );

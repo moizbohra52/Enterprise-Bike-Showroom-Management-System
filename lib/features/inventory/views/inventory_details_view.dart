@@ -116,12 +116,12 @@ class InventoryDetailsView extends GetView<InventoryDetailsController> {
       context: context,
       builder: (BuildContext dialogContext) => SimpleDialog(
         title: const Text('Change status'),
-        children: const <Widget>[
-          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'available'), child: Text('Available')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'reserved'), child: Text('Reserved')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'demo'), child: Text('Demo')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'damaged'), child: Text('Damaged')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'returned'), child: Text('Returned')),
+        children: <Widget>[
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'available'), child: const Text('Available')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'reserved'), child: const Text('Reserved')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'demo'), child: const Text('Demo')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'damaged'), child: const Text('Damaged')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(dialogContext, 'returned'), child: const Text('Returned')),
         ],
       ),
     );

@@ -137,8 +137,8 @@ class _StockTransferViewState extends State<StockTransferView> {
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             secondary: const Icon(Icons.two_wheeler),
-                            onChanged: (bool value) => setState(() {
-                              if (value) {
+                            onChanged: (bool? value) => setState(() {
+                              if (value ?? false) {
                                 _selected.add(item.id!);
                               } else {
                                 _selected.remove(item.id!);
@@ -205,7 +205,7 @@ class _StockTransferViewState extends State<StockTransferView> {
       AppSnackbar.error(context, 'Select at least one bike.');
       return;
     }
-    final bool confirmed = await showDialog<bool>(
+    final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('Confirm transfer'),

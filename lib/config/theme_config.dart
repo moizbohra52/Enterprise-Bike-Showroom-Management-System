@@ -294,11 +294,6 @@ class AppTheme {
             : AppColors.textSecondaryLight,
         indicatorSize: TabBarIndicatorSize.label,
       ),
-      tableTheme: base.tableTheme.copyWith(
-        headerTextStyle: AppTypography.textTheme(dark: dark)
-            .labelMedium
-            ?.copyWith(color: scheme.primary),
-      ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primaryLight,
       ),

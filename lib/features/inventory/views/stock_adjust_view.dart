@@ -69,7 +69,7 @@ class StockAdjustView extends GetView<InventoryController> {
                 ),
                 const SizedBox(height: 12),
                 Expanded(
-                  child: Obx(() => FutureBuilder<List<InventoryModel>>(
+                  child: Obx(() => FutureBuilder<PaginatedResponse<InventoryModel>>(
                         future: controller.repository.list(PageQuery(
                           pageSize: 100,
                           search: _search.value.isEmpty
@@ -77,13 +77,14 @@ class StockAdjustView extends GetView<InventoryController> {
                               : _search.value,
                         )),
                         builder: (BuildContext context,
-                            AsyncSnapshot<List<InventoryModel>> snapshot) {
+                            AsyncSnapshot<PaginatedResponse<InventoryModel>>
+                                snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return const AppLoader();
                           }
                           final List<InventoryModel> bikes =
-                              snapshot.data ?? <InventoryModel>[];
+                              snapshot.data?.items ?? <InventoryModel>[];
                           if (bikes.isEmpty) {
                             return const AppEmptyState(
                               icon: Icons.inventory_2_outlined,

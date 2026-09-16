@@ -167,21 +167,21 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
       context: context,
       builder: (BuildContext context) => SimpleDialog(
         title: const Text('Payment mode'),
-        children: const <Widget>[
+        children: <Widget>[
           SimpleDialogOption(
               onPressed: () => Get.back(result: 'cash'),
-              child: Text('Cash')),
+              child: const Text('Cash')),
           SimpleDialogOption(
-              onPressed: () => Get.back(result: 'upi'), child: Text('UPI')),
+              onPressed: () => Get.back(result: 'upi'), child: const Text('UPI')),
           SimpleDialogOption(
               onPressed: () => Get.back(result: 'card'),
-              child: Text('Card')),
+              child: const Text('Card')),
           SimpleDialogOption(
               onPressed: () => Get.back(result: 'cheque'),
-              child: Text('Cheque')),
+              child: const Text('Cheque')),
           SimpleDialogOption(
               onPressed: () => Get.back(result: 'bank_transfer'),
-              child: Text('Bank Transfer')),
+              child: const Text('Bank Transfer')),
         ],
       ),
     );
