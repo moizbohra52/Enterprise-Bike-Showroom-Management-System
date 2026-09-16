@@ -1067,7 +1067,7 @@
       "name": "enterprise_bike_showroom",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "3.6"
     }
   ],
   "generator": "pub",
