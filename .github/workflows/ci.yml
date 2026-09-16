@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   static-checks:
     name: Static checks (no Dart SDK)
@@ -47,7 +51,51 @@ jobs:
 
       # Errors only: lints/infos are reported but must not fail the build until
       # the tree has been through a full `dart fix` pass.
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Analyze
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee analyze.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          exit $status
+
+      # The Actions log viewer is not always reachable from every environment,
+      # so a failing analysis is also published where it can be read by API.
+      - name: Report errors on the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          errors=$(grep -cE '^[[:space:]]*error[[:space:]]' analyze.txt || true)
+          warnings=$(grep -cE '^[[:space:]]*warning[[:space:]]' analyze.txt || true)
+          {
+            echo '### `flutter analyze` — CI run '"$GITHUB_RUN_ID"
+            echo
+            echo "**'"$errors"' error line(s)**, '"$warnings"' warning line(s).'
+            echo
+            echo '```'
+            grep -E '^[[:space:]]*error[[:space:]]' analyze.txt | head -250
+            echo '```'
+            echo
+            echo '<details><summary>full output (tail)</summary>'
+            echo
+            echo '```'
+            tail -60 analyze.txt
+            echo '```'
+            echo
+            echo '</details>'
+          } > report.md
+          head -c 60000 report.md > report_trim.md
+          gh pr comment "$PR_NUMBER" --body-file report_trim.md
+
+      - name: Upload analyze output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyze-output
+          path: analyze.txt
+          if-no-files-found: ignore
 
       - name: Unit / widget tests
         if: ${{ hashFiles('test/**_test.dart') != '' }}
