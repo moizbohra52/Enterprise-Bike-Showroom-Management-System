@@ -69,6 +69,9 @@ Release builds: `flutter build apk|web|windows --release` with
   checks imports, members, call signatures and declaration legality across
   `lib/` and exits non-zero on findings. `flutter analyze` is still the real
   check; this one runs where no Flutter SDK exists.
+* `python3 scripts/dart_rx_check.py` is its companion for the one class of
+  error a name check cannot see: a GetX `Rx` value used where a plain value is
+  required (`isLoading: controller.saving` instead of `…saving.value`).
 
 When a build fails, the interesting part of the log is the `* What went wrong:`
 block (for Dart errors, the first `Error:` line above it). Get it with

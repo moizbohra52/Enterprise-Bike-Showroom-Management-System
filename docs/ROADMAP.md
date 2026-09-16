@@ -187,3 +187,82 @@ against a fixture with one planted error of each kind first).
 `flutter analyze` is now wired into CI (`.github/workflows/ci.yml`), which is
 the real check.
 
+
+## Fixed 2026-09-16 — second compile-error sweep (same failure, deeper causes)
+
+The classes below are all `:app:compileFlutterBuildDebug` failures that the
+first sweep's symbol/signature checks could not see, because they are about
+*types* and about *external* APIs rather than about names.
+
+### 1. `Obx(child: …)` — GetX's `Obx` has no `child` parameter
+
+`Obx` takes one **positional** builder: `Obx(() => …)`. Forty call sites in
+34 views were written as `Obx(child: …)`, which is
+`No named parameter with the name 'child'`. All rewritten to `Obx(() => …)`.
+
+### 2. Rx values used where plain Dart values are required (26 sites)
+
+`RxBool` is not a `bool` and `RxList<T>` is not a `List<T>`, so these are
+argument-type errors:
+
+```dart
+AppButton(isLoading: controller.saving, …)          // RxBool -> bool
+AppButton(onPressed: _saving ? null : _submit, …)   // RxBool in a condition
+AppTable<UserModel>(items: controller.items, …)     // RxList -> List
+```
+
+Every one now reads `.value`, which also keeps the `Obx` rebuild dependency
+that the raw field access would have lost. Because this class of error is
+invisible to a name-based check, it is now a repo script:
+
+```bash
+python3 scripts/dart_rx_check.py    # exit code 1 when it finds something
+```
+
+It resolves Rx-typed fields/getters per class, `controller.<field>` inside
+`GetView<T>` / `GetWidget<T>` / `GetX<T>`, Rx-typed locals, and the declared
+type of each named-parameter label in the project; reads with `.value` and
+element access (`x[i].y`) are skipped as correct. Validated with a planted
+regression before being trusted.
+
+### 3. `const` constructors on widgets that own mutable state (8 views)
+
+A const constructor cannot live in a class with initialised instance fields,
+and `false.obs` / `TextEditingController()` are not const expressions anyway.
+`CustomerFormView`, `StockAdjustView`, `StockInView`, `StockTransferView`,
+`PaymentFormView`, `ProductFormView`, `SupplierFormView` and `ShowroomFormView`
+all hold Rx/`TextEditingController`/`GlobalKey`/map state, so `const` was
+dropped from those constructors and from their `GetPage` entries in
+`lib/routes/app_pages.dart`.
+
+### 4. `GetMiddleware.priority` changed nullability between get 4.6 and 4.7
+
+`pubspec.yaml` allows `get: ^4.6.6`, which resolves to **4.7.3** today. In
+4.6.x `priority` is `final int? priority`; in 4.7.x it is a non-nullable
+`final int priority` (verified against upstream
+`lib/get_navigation/src/routes/route_middleware.dart`). `int? get priority`
+therefore compiles on one and fails on the other, while `int get priority` is a
+legal override of **both** (covariant return). Both middlewares now use the
+non-nullable form. `redirect(String? route)` and the `GetPage` parameters the
+router uses (`name`, `page`, `binding`, `middlewares`) are unchanged upstream.
+
+### Also audited in this pass
+
+* `image_picker` (`ImagePicker().pickImage(source:, imageQuality:)`,
+  `pickMultiImage`), `hive` (`initFlutter`, `isBoxOpen`, `openBox<dynamic>`),
+  `connectivity_plus` 6.x (`checkConnectivity()` /
+  `onConnectivityChanged` both yield `List<ConnectivityResult>`),
+  `excel` 4.x (`Excel.createExcel()`, `Sheet.appendRow(List<CellValue>)`,
+  `TextCellValue`/`IntCellValue`/`DoubleCellValue`/`BoolCellValue`),
+  `csv` 6.x (`Csv().encode`), `dio` (`BaseOptions`, `Options`, `CancelToken`,
+  `FormData`), `device_info_plus`, `firebase_messaging`, `permission_handler`,
+  `supabase_flutter` (`FileOptions`, `FileObject`, `SearchOptions`,
+  `AuthResponse`, `UserAttributes`).
+* `Get.*` surface used by the app: `find`, `put`, `lazyPut`, `toNamed`,
+  `offAllNamed`, `back`, `until`, `isRegistered`, `parameters`, `currentRoute`,
+  `context`, plus `GetMaterialApp`'s parameters — all present upstream.
+* Unimplemented abstract members and incompatible `@override` signatures across
+  all 432 project types: scanned, **zero** findings (the scan was validated
+  against planted abstract method/getter/`abstract` declarations first). This
+  one is not shipped as a script because it needs the type lattice that
+  `flutter analyze` already has.
