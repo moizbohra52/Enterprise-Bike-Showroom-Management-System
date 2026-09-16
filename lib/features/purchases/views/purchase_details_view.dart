@@ -14,6 +14,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:enterprise_bike_showroom/features/purchases/controllers/purchase_controller.dart';
 import 'package:enterprise_bike_showroom/features/purchases/models/purchase_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Purchase details: lines + receive + pay supplier.
 class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
@@ -96,7 +97,7 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
     if (ok) AppSnackbar.success(context, 'Stock received');
   }
 
-  Future<void> _pay() async {
+  Future<void> _pay(BuildContext context) async {
     final PurchaseModel purchase = controller.purchase.value!;
     final num outstanding = purchase.outstandingAmount;
     final String? raw = await AppDialog.prompt(
@@ -114,17 +115,21 @@ class PurchaseDetailsView extends GetView<PurchaseDetailsController> {
     }
     final String? mode = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => SimpleDialog(
+      builder: (BuildContext dialogContext) => SimpleDialog(
         title: const Text('Payment mode'),
-        children: const <Widget>[
-          SimpleDialogOption(onPressed: () => Get.back(result: 'cash'),
-              child: Text('Cash')),
-          SimpleDialogOption(onPressed: () => Get.back(result: 'bank_transfer'),
-              child: Text('Bank Transfer')),
-          SimpleDialogOption(onPressed: () => Get.back(result: 'cheque'),
-              child: Text('Cheque')),
-          SimpleDialogOption(onPressed: () => Get.back(result: 'upi'),
-              child: Text('UPI')),
+        children: <Widget>[
+          SimpleDialogOption(
+              onPressed: () => Get.back(result: 'cash'),
+              child: const Text('Cash')),
+          SimpleDialogOption(
+              onPressed: () => Get.back(result: 'bank_transfer'),
+              child: const Text('Bank Transfer')),
+          SimpleDialogOption(
+              onPressed: () => Get.back(result: 'cheque'),
+              child: const Text('Cheque')),
+          SimpleDialogOption(
+              onPressed: () => Get.back(result: 'upi'),
+              child: const Text('UPI')),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:enterprise_bike_showroom/common/models/base_model.dart';
 import 'package:enterprise_bike_showroom/core/utils/safe_json.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// One physical bike in stock (tracked individually by chassis/engine no.).
 class InventoryModel extends BaseModel {

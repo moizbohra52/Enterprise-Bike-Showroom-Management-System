@@ -17,7 +17,7 @@ class SaleController extends BaseListController<SaleModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }
@@ -100,7 +100,7 @@ class SaleFormController extends GetxController {
     try {
       customers.assignAll(
         await repository.searchCustomers(
-          term,
+          term ?? '',
           showroomId: session.activeShowroomId.isNotEmpty
               ? session.activeShowroomId
               : null,
@@ -127,9 +127,9 @@ class SaleFormController extends GetxController {
   /// Selects a vehicle; loads its accessories + EMI plans.
   Future<void> selectVehicle(String id) async {
     selectedVehicleId.value = id;
-    final Map<String, dynamic>? vehicle =
-        availableVehicles.value.firstWhere((Map<String, dynamic> v) =>
-            SafeJson.asId(v['id']) == id,
+    final Map<String, dynamic> vehicle =
+        availableVehicles.firstWhere(
+            (Map<String, dynamic> v) => SafeJson.asId(v['id']) == id,
             orElse: () => <String, dynamic>{});
     if (vehicle.isEmpty) return;
     final dynamic product = vehicle['product'];
@@ -170,7 +170,7 @@ class SaleFormController extends GetxController {
     }
     accessoriesTotal.value = acc;
     final num subtotal = vehiclePrice.value + acc - discount.value;
-    taxAmount.value = (subtotal * taxRate / 100).toIntAsMoney();
+    taxAmount.value = ((subtotal * taxRate / 100) * 100).round() / 100;
     total.value = subtotal + taxAmount.value;
 
     // EMI preview (server is authoritative at creation).
@@ -246,7 +246,8 @@ class SaleFormController extends GetxController {
 
   final Rx<String> paymentMode = 'cash'.obs;
 
-  void changePaymentMode(String mode) {
+  void changePaymentMode(String? mode) {
+    if (mode == null) return;
     paymentMode.value = mode;
     if (mode == 'emi') {
       final num suggested = (total.value * 0.1).roundToDouble();

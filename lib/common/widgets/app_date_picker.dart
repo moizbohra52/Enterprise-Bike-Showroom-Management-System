@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DateUtils;
 
 import 'package:enterprise_bike_showroom/core/utils/date_utils.dart';
 
@@ -122,8 +122,9 @@ class _AppDateRangeState extends State<AppDateRange> {
       context: context,
       firstDate: widget.firstDate ?? DateTime(now.year - 5),
       lastDate: widget.lastDate ?? now.add(const Duration(days: 1)),
-      initialStartDate: widget.start,
-      initialEndDate: widget.end,
+      initialDateRange: widget.start != null && widget.end != null
+          ? DateTimeRange(start: widget.start!, end: widget.end!)
+          : null,
     );
     if (range != null) {
       widget.onChanged(range.start, range.end);

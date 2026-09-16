@@ -12,6 +12,7 @@ import 'package:enterprise_bike_showroom/core/errors/error_mapper.dart';
 import 'package:enterprise_bike_showroom/core/validators/validators.dart';
 import 'package:enterprise_bike_showroom/common/models/showroom_model.dart';
 import 'package:enterprise_bike_showroom/features/showroom/controllers/showroom_controller.dart';
+import 'package:enterprise_bike_showroom/features/showroom/repositories/showroom_repository.dart';
 
 /// Add / edit showroom form.
 class ShowroomFormView extends GetView<ShowroomController> {
@@ -57,7 +58,7 @@ class ShowroomFormView extends GetView<ShowroomController> {
     'panNumber': TextEditingController(),
     'invoicePrefix': TextEditingController(text: 'INV'),
   };
-  String _status = 'active';
+  final RxString _status = 'active'.obs;
 
   Future<void> _load(ShowroomRepository repository, String id) async {
     final ShowroomModel? showroom = await repository.getById(id);
@@ -73,7 +74,7 @@ class ShowroomFormView extends GetView<ShowroomController> {
     _fields['gstNumber']?.text = showroom.gstNumber;
     _fields['panNumber']?.text = showroom.panNumber;
     _fields['invoicePrefix']?.text = showroom.invoicePrefix;
-    _status = showroom.status;
+    _status.value = showroom.status;
   }
 
   Widget _form(bool isEdit) {
@@ -125,16 +126,16 @@ class ShowroomFormView extends GetView<ShowroomController> {
                             validator: (String? v) => AppValidators.pan(v)),
                         _field('invoicePrefix', 'Invoice Prefix'),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _status,
-              decoration: const InputDecoration(labelText: 'Status'),
+                        Obx(() => DropdownButtonFormField<String>(
+                          value: _status.value,
+                          decoration: const InputDecoration(labelText: 'Status'),
                           items: const <DropdownMenuItem<String>>[
                             DropdownMenuItem(value: 'active', child: Text('Active')),
                             DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
                           ],
                           onChanged: (String? value) =>
-                              setState(() => _status = value ?? 'active'),
-                        ),
+                              _status.value = value ?? 'active',
+                        )),
                       ],
                     ),
                   ),
@@ -176,7 +177,7 @@ class ShowroomFormView extends GetView<ShowroomController> {
       'gst_number': _fields['gstNumber']!.text.trim().toUpperCase(),
       'pan_number': _fields['panNumber']!.text.trim().toUpperCase(),
       'invoice_prefix': _fields['invoicePrefix']!.text.trim().toUpperCase(),
-      'status': _status,
+      'status': _status.value,
     };
     try {
       if (isEdit && id != null) {

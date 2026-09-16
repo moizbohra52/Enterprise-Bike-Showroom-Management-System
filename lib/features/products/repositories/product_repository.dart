@@ -27,7 +27,7 @@ class ProductRepository {
           .eq('status', 'active')
           .order('name');
       return <BrandModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) BrandModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -49,10 +49,9 @@ class ProductRepository {
 
   Future<PaginatedResponse<ProductModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table(_table)
-          .select('*, brand:brands(*)', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*, brand:brands(*)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or('name.ilike.%$term%,model.ilike.%$term%,variant.ilike.%$term%');
@@ -66,7 +65,8 @@ class ProductRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<ProductModel>.fromSupabase(
@@ -188,7 +188,7 @@ class ProductRepository {
           .eq('product_id', productId)
           .order('service_number');
       return <Map<String, dynamic>>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) SafeJson.asMap(r),
       ];
     } catch (e) {

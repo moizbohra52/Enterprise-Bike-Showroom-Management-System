@@ -20,7 +20,7 @@ class ProductController extends BaseListController<ProductModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     await loadBrands();
     refresh();
   }
@@ -52,7 +52,7 @@ class ProductController extends BaseListController<ProductModel> {
   Future<void> openForm({String? id}) async {
     await Get.toNamed(
       AppRoutes.productForm,
-      parameters: <String, String?>{
+      parameters: <String, String>{
         if (id != null) 'id': id,
       },
     );
@@ -61,7 +61,7 @@ class ProductController extends BaseListController<ProductModel> {
 
   Future<void> openDetails(ProductModel product) async {
     await Get.toNamed(AppRoutes.productDetails,
-        parameters: <String, String?>{'id': product.id});
+        parameters: <String, String>{'id': product.id!});
   }
 }
 

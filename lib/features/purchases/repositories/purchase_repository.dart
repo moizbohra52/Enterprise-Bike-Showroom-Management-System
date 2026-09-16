@@ -21,10 +21,9 @@ class PurchaseRepository {
 
   Future<PaginatedResponse<SupplierModel>> listSuppliers(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('suppliers')
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -36,7 +35,8 @@ class PurchaseRepository {
         builder = builder.eq('status', status);
       }
       builder = builder.order('name', ascending: true);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<SupplierModel>.fromSupabase(
@@ -102,7 +102,7 @@ class PurchaseRepository {
           .order('name')
           .limit(200);
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {
@@ -129,13 +129,9 @@ class PurchaseRepository {
 
   Future<PaginatedResponse<PurchaseModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('purchases')
-          .select(
-            '*, supplier:suppliers(name, phone)',
-            count: CountOption.exact,
-          )
-          .range(query.offset, query.end);
+          .select('*, supplier:suppliers(name, phone)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -154,7 +150,8 @@ class PurchaseRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<PurchaseModel>.fromSupabase(

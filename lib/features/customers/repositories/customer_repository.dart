@@ -30,10 +30,9 @@ class CustomerRepository {
     try {
       // `customers_with_summary` is an SQL view (migration 011) that adds
       // derived `outstanding` and `vehicle_count` columns.
-      var builder = supabase
+      dynamic builder = supabase
           .table('customers_with_summary')
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -54,7 +53,8 @@ class CustomerRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<CustomerModel>.fromSupabase(
@@ -129,7 +129,7 @@ class CustomerRepository {
           .eq('customer_id', customerId)
           .order('created_at', ascending: false);
       return <CustomerVehicleModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) CustomerVehicleModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -169,13 +169,13 @@ class CustomerRepository {
     String? order,
     int limit = 100,
   }) async {
-    var builder = supabase.table(table).select().eq(column, customerId).limit(limit);
+    dynamic builder = supabase.table(table).select().eq(column, customerId).limit(limit);
     if (order != null) {
       builder = builder.order(order, ascending: false);
     }
     final dynamic rows = await builder;
     return <Map<String, dynamic>>[
-      for (final dynamic r in SafeJson.asList(rows))
+      for (final dynamic r in SafeJson.asList(rows));
         if (r is Map) SafeJson.asMap(r),
     ];
   }
@@ -238,8 +238,8 @@ class CustomerRepository {
     }
 
     // Service events come via the customer's vehicles.
-    final List<CustomerVehicleModel> vehicles = await vehicles(customerId);
-    for (final CustomerVehicleModel v in vehicles) {
+    final List<CustomerVehicleModel> vehicleList = await this.vehicles(customerId);
+    for (final CustomerVehicleModel v in vehicleList) {
       if (v.id == null) continue;
       final List<Map<String, dynamic>> services = await relatedRows(
           'service_records',

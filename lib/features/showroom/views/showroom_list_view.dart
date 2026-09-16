@@ -22,7 +22,7 @@ class ShowroomListView extends GetView<ShowroomController> {
     return AppShell(
       title: 'Showrooms',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.showroomCreate,
           child: AppButton(
             label: 'Add Showroom',

@@ -18,13 +18,13 @@ class InventoryController extends BaseListController<InventoryModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
   Future<void> openDetails(InventoryModel item) async {
     await Get.toNamed(AppRoutes.inventoryDetails,
-        parameters: <String, String?>{'id': item.id});
+        parameters: <String, String>{'id': item.id!});
   }
 
   Future<void> openStockIn() async {

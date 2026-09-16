@@ -67,7 +67,7 @@ class UserRepository {
     final dynamic rows =
         await supabase.table('roles').select().inFilter('id', roleIds);
     return <RoleModel>[
-      for (final dynamic r in SafeJson.asList(rows))
+      for (final dynamic r in SafeJson.asList(rows));
         if (r is Map) RoleModel.fromJson(SafeJson.asMap(r)),
     ];
   }
@@ -81,7 +81,7 @@ class UserRepository {
         .select('role_id')
         .eq('user_id', userId);
     return <String>[
-      for (final dynamic r in SafeJson.asList(rows))
+      for (final dynamic r in SafeJson.asList(rows));
         if (r is Map) SafeJson.asText(r['role_id']),
     ].where((String id) => id.isNotEmpty).toList();
   }
@@ -89,7 +89,7 @@ class UserRepository {
   Future<List<String>> _permissionsFor(List<RoleModel> roles) async {
     if (roles.isEmpty) return <String>[];
     final List<String> roleIds = <String>[
-      for (final RoleModel r in roles)
+      for (final RoleModel r in roles);
         if (r.id != null) r.id!,
     ];
     if (roleIds.isEmpty) return <String>[];
@@ -98,7 +98,7 @@ class UserRepository {
         .select('permission_id')
         .inFilter('role_id', roleIds);
     final List<String> permissionIds = <String>[
-      for (final dynamic r in SafeJson.asList(rows))
+      for (final dynamic r in SafeJson.asList(rows));
         if (r is Map) SafeJson.asText(r['permission_id']),
     ].where((String id) => id.isNotEmpty).toList();
     if (permissionIds.isEmpty) return <String>[];
@@ -107,7 +107,7 @@ class UserRepository {
         .select('module, action')
         .inFilter('id', permissionIds);
     return <String>[
-      for (final dynamic p in SafeJson.asList(perms))
+      for (final dynamic p in SafeJson.asList(perms));
         if (p is Map)
           '${SafeJson.asText(p['module'])}.${SafeJson.asText(p['action'])}',
     ].where((String s) => s != '.').toList()..sort();
@@ -122,7 +122,7 @@ class UserRepository {
           .eq('status', 'active')
           .order('code');
       return <ShowroomModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) ShowroomModel.fromJson(SafeJson.asMap(r)),
       ];
     }
@@ -147,10 +147,9 @@ class UserRepository {
       final String? showroomId =
           SafeJson.asString(query.filters['showroom_id']);
 
-      var builder = supabase
+      dynamic builder = supabase
           .table(_table)
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       if (searchTerm != null && searchTerm.isNotEmpty) {
         builder = builder.or(
           'name.ilike.%$searchTerm%,email.ilike.%$searchTerm%,phone.ilike.%$searchTerm%',
@@ -164,7 +163,8 @@ class UserRepository {
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
 
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       final int total = _countOf(result);
       final List<dynamic> rows = SafeJson.asList(result);
       return PaginatedResponse<UserModel>.fromSupabase(
@@ -278,7 +278,7 @@ class UserRepository {
       final dynamic rows =
           await supabase.table('roles').select().order('name');
       return <RoleModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) RoleModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -294,7 +294,7 @@ class UserRepository {
           .order('module')
           .order('action');
       return <PermissionModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) PermissionModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {
@@ -309,7 +309,7 @@ class UserRepository {
           .select('permission_id')
           .eq('role_id', roleId);
       return <String>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) SafeJson.asText(r['permission_id']),
       ].where((String id) => id.isNotEmpty).toList();
     } catch (e) {

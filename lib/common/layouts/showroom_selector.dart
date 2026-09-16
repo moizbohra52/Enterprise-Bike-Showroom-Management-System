@@ -36,7 +36,10 @@ class ShowroomSelector extends StatelessWidget {
             isDense: true,
             dropdownColor: Theme.of(context).canvasColor,
             icon: const Icon(Icons.swap_vert, size: 16),
-            items: options,
+            items: <DropdownMenuItem<String>>[
+              for (final DropdownOption<String> o in options)
+                DropdownMenuItem<String>(value: o.value, child: Text(o.label)),
+            ],
             onChanged: session.isSuperAdmin || options.length > 1
                 ? (String? id) async {
                     if (id == null || id == session.activeShowroomId) return;

@@ -12,6 +12,7 @@ import 'package:enterprise_bike_showroom/common/widgets/app_status_chip.dart';
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/products/controllers/product_controller.dart';
 import 'package:enterprise_bike_showroom/features/products/models/product_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Product details: specs, colors, images, pricing.
 class ProductDetailsView extends GetView<ProductDetailsController> {

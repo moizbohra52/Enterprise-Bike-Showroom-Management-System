@@ -13,6 +13,7 @@ import 'package:enterprise_bike_showroom/core/utils/safe_json.dart';
 import 'package:enterprise_bike_showroom/features/purchases/controllers/purchase_controller.dart';
 import 'package:enterprise_bike_showroom/features/products/models/product_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// New purchase order: supplier + lines + totals.
 class PurchaseFormView extends GetView<PurchaseFormController> {

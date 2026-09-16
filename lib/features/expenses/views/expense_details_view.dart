@@ -14,6 +14,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:enterprise_bike_showroom/features/expenses/controllers/expense_controller.dart';
 import 'package:enterprise_bike_showroom/features/expenses/models/expense_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Expense details + approve / reject (workflow).
 class ExpenseDetailsView extends GetView<ExpenseDetailsController> {

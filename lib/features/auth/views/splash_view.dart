@@ -63,7 +63,7 @@ class _SplashViewState extends State<SplashView> {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: const Icon(Icons.pedals, size: 52, color: Colors.white),
+              child: const Icon(Icons.two_wheeler, size: 52, color: Colors.white),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(

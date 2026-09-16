@@ -35,14 +35,14 @@ class CustomerController extends BaseListController<CustomerModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
   Future<void> openForm({String? id}) async {
     await Get.toNamed(
       AppRoutes.customerForm,
-      parameters: <String, String?>{
+      parameters: <String, String>{
         if (id != null) 'id': id,
       },
     );
@@ -51,7 +51,7 @@ class CustomerController extends BaseListController<CustomerModel> {
 
   Future<void> openDetails(CustomerModel customer) async {
     await Get.toNamed(AppRoutes.customerDetails,
-        parameters: <String, String?>{'id': customer.id});
+        parameters: <String, String>{'id': customer.id!});
   }
 
   /// Creates a customer — remote when online, queued when offline.

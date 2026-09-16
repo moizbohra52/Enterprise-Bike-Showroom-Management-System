@@ -18,7 +18,7 @@ class ReminderController extends BaseListController<ReminderModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 

@@ -21,10 +21,15 @@ import 'package:enterprise_bike_showroom/features/inventory/models/inventory_mod
 import 'package:enterprise_bike_showroom/features/inventory/repositories/inventory_repository.dart';
 
 /// Transfer bikes between showrooms (select available bikes).
-class StockTransferView extends GetView<InventoryController> {
-  // Not const: this widget owns mutable state (Rx / TextEditingController),
-  // and a const constructor cannot have initialized instance fields.
+class StockTransferView extends StatefulWidget {
   StockTransferView({super.key});
+
+  @override
+  State<StockTransferView> createState() => _StockTransferViewState();
+}
+
+class _StockTransferViewState extends State<StockTransferView> {
+  InventoryController get controller => Get.find<InventoryController>();
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +136,7 @@ class StockTransferView extends GetView<InventoryController> {
                               '${item.stockCode} · Chassis ${item.chassisNumber}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            secondary: const Icon(Icons.pedals_outlined),
+                            secondary: const Icon(Icons.two_wheeler),
                             onChanged: (bool value) => setState(() {
                               if (value) {
                                 _selected.add(item.id!);

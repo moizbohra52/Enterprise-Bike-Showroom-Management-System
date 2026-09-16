@@ -161,6 +161,6 @@ class EmiScheduleModel {
         'balance_after': balanceAfter,
         'status': status,
         'paid_amount': paidAmount,
-        if (paidAt != null) 'paid_at': paidAt.toIso8601String(),
+        if (paidAt != null) 'paid_at': paidAt!.toIso8601String(),
       };
 }

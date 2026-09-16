@@ -11,6 +11,7 @@ import 'package:enterprise_bike_showroom/common/widgets/app_status_chip.dart';
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/inventory/controllers/inventory_controller.dart';
 import 'package:enterprise_bike_showroom/features/inventory/models/inventory_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Single-bike details + status actions + stock history.
 class InventoryDetailsView extends GetView<InventoryDetailsController> {

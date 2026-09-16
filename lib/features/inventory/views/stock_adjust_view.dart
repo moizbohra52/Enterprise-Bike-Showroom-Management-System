@@ -47,7 +47,7 @@ class StockAdjustView extends GetView<InventoryController> {
   final RxBool _saving = false.obs;
   final Rx<String> _search = ''.obs;
   final Rx<InventoryModel?> _selected = Rx<InventoryModel?>(null);
-  String? _newStatus;
+  final RxnString _newStatus = RxnString();
   final TextEditingController _location = TextEditingController();
   final TextEditingController _reason = TextEditingController();
 
@@ -146,7 +146,7 @@ class StockAdjustView extends GetView<InventoryController> {
                 subtitle: bike.productLabel,
                 child: Column(
                   children: <Widget>[
-                    AppDropdown<String?>(
+                    Obx(() => AppDropdown<String?>(
                       label: 'New Status *',
                       options: const <DropdownOption<String?>>[
                         DropdownOption<String?>(value: null, label: 'Select'),
@@ -157,10 +157,10 @@ class StockAdjustView extends GetView<InventoryController> {
                         DropdownOption<String?>(value: 'in_transit', label: 'In Transit'),
                         DropdownOption<String?>(value: 'returned', label: 'Returned'),
                       ],
-                      value: _newStatus,
+                      value: _newStatus.value,
                       onChanged: (String? value) =>
-                          setState(() => _newStatus = value),
-                    ),
+                          _newStatus.value = value,
+                    )),
                     const SizedBox(height: 12),
                     AppTextField(
                       label: 'New Location',
@@ -188,7 +188,7 @@ class StockAdjustView extends GetView<InventoryController> {
       AppSnackbar.error(context, 'Select a bike to adjust.');
       return;
     }
-    if (_newStatus == null) {
+    if (_newStatus.value == null) {
       AppSnackbar.error(context, 'Select the new status.');
       return;
     }
@@ -200,7 +200,7 @@ class StockAdjustView extends GetView<InventoryController> {
     try {
       await Get.find<InventoryRepository>().adjust(
         inventoryId: bike.id!,
-        newStatus: _newStatus!,
+        newStatus: _newStatus.value!,
         location: _location.text.trim().isEmpty
             ? null
             : _location.text.trim(),

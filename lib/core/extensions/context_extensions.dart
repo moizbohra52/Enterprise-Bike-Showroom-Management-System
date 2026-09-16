@@ -2,6 +2,9 @@ import 'package:enterprise_bike_showroom/config/app_config.dart';
 import 'package:flutter/material.dart';
 
 /// Convenience accessors on [BuildContext].
+///
+/// Note: GetX also defines `isTablet` / `isPhone` on [BuildContext]. This
+/// extension deliberately uses `isAppTablet` so the two never collide.
 extension ContextX on BuildContext {
   MediaQueryData get mediaQuery => MediaQuery.of(this);
   TextTheme get textTheme => Theme.of(this).textTheme;
@@ -13,7 +16,8 @@ extension ContextX on BuildContext {
   double get bottomPadding => mediaQuery.padding.bottom;
 
   bool get isDesktop => width >= AppConfig.desktopBreakpoint;
-  bool get isTablet => width >= AppConfig.tabletBreakpoint && !isDesktop;
+  bool get isAppTablet =>
+      width >= AppConfig.tabletBreakpoint && !isDesktop;
   bool get isMobile => width < AppConfig.tabletBreakpoint;
 
   /// Responsive horizontal page padding.

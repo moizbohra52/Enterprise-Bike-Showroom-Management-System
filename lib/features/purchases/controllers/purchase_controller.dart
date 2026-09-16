@@ -22,7 +22,7 @@ class SupplierController extends BaseListController<SupplierModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
@@ -51,7 +51,7 @@ class PurchaseController extends BaseListController<PurchaseModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

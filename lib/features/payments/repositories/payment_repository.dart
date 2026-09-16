@@ -16,13 +16,9 @@ class PaymentRepository {
 
   Future<PaginatedResponse<PaymentModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('payments')
-          .select(
-            '*, customer:customers(name, phone)',
-            count: CountOption.exact,
-          )
-          .range(query.offset, query.end);
+          .select('*, customer:customers(name, phone)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -47,7 +43,8 @@ class PaymentRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<PaymentModel>.fromSupabase(

@@ -145,7 +145,7 @@ class PdfService {
 
     doc.addPage(
       pw.Page(
-        pageFormat: const PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return pw.Column(
             children: <pw.Widget>[
@@ -195,18 +195,18 @@ class PdfService {
               pw.SizedBox(height: 14),
               pw.Table(
                 border: pw.TableBorder.all(color: const PdfColor.fromInt(0xFFCBD5E1)),
-                columnWidths: <int, pw.FlexFit>{
-                  0: pw.FlexFit.flex(3.2),
-                  1: pw.FlexFit.fit(60),
-                  2: pw.FlexFit.fit(80),
-                  3: pw.FlexFit.fit(70),
-                  4: pw.FlexFit.fit(50),
-                  5: pw.FlexFit.fit(80),
+                columnWidths: <int, pw.TableColumnWidth>{
+                  0: const pw.FlexColumnWidth(3.2),
+                  1: const pw.FixedColumnWidth(60),
+                  2: const pw.FixedColumnWidth(80),
+                  3: const pw.FixedColumnWidth(70),
+                  4: const pw.FixedColumnWidth(50),
+                  5: const pw.FixedColumnWidth(80),
                 },
                 children: <pw.TableRow>[
                   pw.TableRow(
-                    decoration: pw.BoxDecoration(color: const PdfColor.fromInt(0xFFF1F5F9)),
-                    cells: <pw.Widget>[
+                    decoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFF1F5F9)),
+                    children: <pw.Widget>[
                       _head('DESCRIPTION'),
                       _head('QTY'),
                       _head('RATE'),
@@ -217,7 +217,7 @@ class PdfService {
                   ),
                   for (final InvoicePdfItem item in data.items)
                     pw.TableRow(
-                      cells: <pw.Widget>[
+                      children: <pw.Widget>[
                         pw.Padding(
                           padding: const pw.EdgeInsets.symmetric(horizontal: 4),
                           child: pw.Text(item.description,
@@ -284,7 +284,7 @@ class PdfService {
     final PdfColor primary = const PdfColor.fromInt(0xFF14532D);
     doc.addPage(
       pw.Page(
-        pageFormat: const PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return pw.Column(
             children: <pw.Widget>[
@@ -336,7 +336,7 @@ class PdfService {
     final PdfColor primary = const PdfColor.fromInt(0xFF14532D);
     doc.addPage(
       pw.Page(
-        pageFormat: const PdfPageFormat.a4,
+        pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return pw.Column(
             children: <pw.Widget>[
@@ -392,11 +392,11 @@ class PdfService {
     final pw.Document doc = pw.Document();
     final PdfColor primary = const PdfColor.fromInt(0xFF14532D);
     const int rowsPerPage = 28;
-    final List<List<String>> pages = rows.chunked(rowsPerPage);
+    final List<List<List<String>>> pages = rows.chunked(rowsPerPage);
     for (int i = 0; i < pages.length; i++) {
       doc.addPage(
         pw.Page(
-          pageFormat: const PdfPageFormat.a4,
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -425,13 +425,13 @@ class PdfService {
                     pw.TableRow(
                       decoration: const pw.BoxDecoration(
                           color: PdfColor.fromInt(0xFFF1F5F9)),
-                      cells: <pw.Widget>[
+                      children: <pw.Widget>[
                         for (final String column in columns) _head(column),
                       ],
                     ),
                     for (final List<String> row in pages[i])
                       pw.TableRow(
-                        cells: <pw.Widget>[
+                        children: <pw.Widget>[
                           for (final String cell in row)
                             pw.Padding(
                               padding: const pw.EdgeInsets.symmetric(horizontal: 4),

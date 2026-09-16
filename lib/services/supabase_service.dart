@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:enterprise_bike_showroom/config/supabase_config.dart';
-import 'package:enterprise_bike_showroom/core/errors/app_exception.dart';
 import 'package:enterprise_bike_showroom/core/errors/error_mapper.dart';
 import 'package:enterprise_bike_showroom/core/helpers/logger.dart';
 import 'package:enterprise_bike_showroom/core/utils/safe_json.dart';
@@ -95,13 +94,27 @@ class SupabaseService {
 }
 
 /// Extension making `select` count usage explicit and consistent.
+///
+/// PostgREST v2+ uses chained `.count(CountOption.exact)` instead of the
+/// deprecated `select(columns, count: …)` named argument.
 extension SupabaseQueryX on SupabaseQueryBuilder {
-  /// Builds `select('*', count: exact)` for paginated reads.
-  PostgrestFilterBuilder withExactCount([String select = '*']) {
-    return select2(select, count: CountOption.exact);
+  /// Builds `select(columns)` for paginated reads.
+  /// Callers should chain filters, then finish with `.count(CountOption.exact)`.
+  PostgrestFilterBuilder withExactCount([String columns = '*']) {
+    return select(columns);
   }
+}
 
-  PostgrestFilterBuilder select2(String select, {CountOption? count}) {
-    return select(select, count: count ?? CountOption.exact);
+/// Helpers for reading the count off a PostgREST response.
+extension PostgrestResponseCountX on dynamic {
+  /// Best-effort count extraction from a PostgrestResponse / list response.
+  int get exactCount {
+    try {
+      // ignore: avoid_dynamic_calls
+      final dynamic c = this.count;
+      if (c is int) return c;
+      if (c is num) return c.toInt();
+    } catch (_) {}
+    return 0;
   }
 }

@@ -11,7 +11,7 @@ class LoanController extends BaseListController<LoanModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

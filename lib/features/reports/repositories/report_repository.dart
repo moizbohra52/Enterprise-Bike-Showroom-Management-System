@@ -189,15 +189,15 @@ class ReportRepository {
           params ?? const <String, dynamic>{};
       if (definition.source.endsWith('_view') ||
           definition.source.endsWith('_summary')) {
-        var builder = supabase
+        dynamic builder = supabase
             .table(definition.source)
-            .select('*')
-            .limit(limit);
+            .select('*');
         final String? showroomId =
             SafeJson.asString(safeParams['showroom_id']);
         if (showroomId != null && showroomId.isNotEmpty) {
           builder = builder.eq('showroom_id', showroomId);
         }
+        builder = builder.limit(limit);
         rows = await builder;
       } else {
         rows = await supabase.rpc(
@@ -205,7 +205,7 @@ class ReportRepository {
             params: <String, dynamic>{...(params ?? const <String, dynamic>{})});
       }
       return <Map<String, dynamic>>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) SafeJson.asMap(row),
       ];
     } catch (e) {

@@ -123,7 +123,8 @@ class NotificationController extends GetxController {
 
   /// Opens a notification (marks read + navigates to the reference).
   Future<void> open(NotificationModel notification) async {
-    if (!notification.isRead) await markRead(notification.id);
+    final String? nid = notification.id;
+    if (!notification.isRead && nid != null) await markRead(nid);
     _navigateToReference(notification);
   }
 
