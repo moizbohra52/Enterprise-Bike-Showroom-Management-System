@@ -69,7 +69,7 @@ class SupplierListView extends GetView<SupplierController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<SupplierModel>(
                     items: controller.items.value,

@@ -109,7 +109,7 @@ class _PaymentListViewState extends State<PaymentListView> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<PaymentModel>(
                     items: controller.items.value,

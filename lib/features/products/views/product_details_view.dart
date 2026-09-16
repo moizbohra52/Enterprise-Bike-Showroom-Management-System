@@ -96,7 +96,7 @@ class ProductDetailsView extends GetView<ProductDetailsController> {
                       label: 'Deactivate',
                       icon: Icons.block,
                       variant: AppButtonVariant.outlined,
-                      onPressed: _confirmDeactivate,
+                      onPressed: () => _confirmDeactivate(context),
                     ),
                   ],
                 ),
@@ -179,7 +179,7 @@ class ProductDetailsView extends GetView<ProductDetailsController> {
     );
   }
 
-  Future<void> _confirmDeactivate() async {
+  Future<void> _confirmDeactivate(BuildContext context) async {
     final bool confirmed = await AppDialog.confirm(
       context,
       title: 'Deactivate product?',

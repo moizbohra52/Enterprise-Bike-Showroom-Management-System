@@ -9,7 +9,12 @@ import 'package:enterprise_bike_showroom/features/reminders/repositories/reminde
 /// Reminder center.
 class ReminderController extends BaseListController<ReminderModel> {
   ReminderController(ReminderRepository repository)
-      : super(repository.list, pageSize: 20);
+      : super(repository.list, pageSize: 20) {
+    this.repository = repository;
+  }
+
+  /// Kept as a field: `super()` only receives the loader function.
+  late final ReminderRepository repository;
 
   @override
   Future<void> onInit() async {

@@ -29,14 +29,14 @@ class AppAvatar extends StatelessWidget {
                 imageUrl: url,
                 fit: BoxFit.cover,
                 errorWidget: (BuildContext context, String _, dynamic __) =>
-                    _initials(),
+                    _initials(context),
               )
-            : _initials(),
+            : _initials(context),
       ),
     );
   }
 
-  Widget _initials() {
+  Widget _initials(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
       color: colors.primary.withAlpha(60),

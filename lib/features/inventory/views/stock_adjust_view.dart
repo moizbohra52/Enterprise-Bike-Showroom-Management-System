@@ -20,7 +20,9 @@ import 'package:enterprise_bike_showroom/features/inventory/repositories/invento
 
 /// Stock adjustment: pick a bike, change status / location with a reason.
 class StockAdjustView extends GetView<InventoryController> {
-  const StockAdjustView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  StockAdjustView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +32,11 @@ class StockAdjustView extends GetView<InventoryController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Apply Adjustment',
             icon: Icons.check,
-            isLoading: saving,
-            onPressed: saving ? null : _submit,
+            isLoading: saving.value,
+            onPressed: saving.value ? null : () => _submit(context),
           ),
         ),
       ],
@@ -180,7 +182,7 @@ class StockAdjustView extends GetView<InventoryController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final InventoryModel? bike = _selected.value;
     if (bike == null || bike.id == null) {
       AppSnackbar.error(context, 'Select a bike to adjust.');

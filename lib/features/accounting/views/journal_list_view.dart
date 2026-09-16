@@ -72,7 +72,7 @@ class JournalListView extends GetView<JournalController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<JournalEntryModel>(
                     items: controller.items.value,

@@ -70,7 +70,7 @@ class InsuranceListView extends GetView<InsuranceController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<InsurancePolicyModel>(
                     items: controller.items.value,

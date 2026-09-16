@@ -31,7 +31,7 @@ class ErrorMapper {
       // Surface unexpected errors with context in development only.
       return UnknownException('Unexpected error: $error', error);
     }
-    return UnknownException(details: error);
+    return UnknownException.withDetails(error);
   }
 
   /// Friendly one-line message for any thrown object (snackbars/dialogs).
@@ -75,7 +75,7 @@ class ErrorMapper {
             error.message?.contains('Connection') == true) {
           return NetworkException();
         }
-        return UnknownException(details: error);
+        return UnknownException.withDetails(error);
     }
   }
 

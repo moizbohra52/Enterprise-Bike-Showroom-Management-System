@@ -6,6 +6,7 @@ class PermissionModel extends BaseModel {
   PermissionModel({
     super.id,
     super.createdAt,
+    super.updatedAt,
     required this.module,
     required this.action,
     this.description = '',

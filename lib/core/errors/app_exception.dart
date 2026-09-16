@@ -100,4 +100,13 @@ class UnknownException extends AppException {
     String message = 'Something went wrong. Please try again.',
     dynamic details,
   ]) : super(message, code: 'unknown', details: details);
+
+  /// Keeps the generic user-facing message but preserves the underlying error
+  /// for the logs (`details` is never displayed).
+  UnknownException.withDetails(dynamic details)
+      : super(
+          'Something went wrong. Please try again.',
+          code: 'unknown',
+          details: details,
+        );
 }

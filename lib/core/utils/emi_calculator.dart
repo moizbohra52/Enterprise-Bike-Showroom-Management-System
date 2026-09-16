@@ -79,6 +79,58 @@ class EmiCalculator {
         : calculateEmi(principal, annualRatePercent, months);
   }
 
+  /// Monthly EMI, named the way the sale/loan forms read it.
+  ///
+  /// [method] is an alias for [EmiCalculator.calculate]'s `interestType` so
+  /// both flat and reducing previews share one implementation.
+  static num monthlyEmi(
+    num principal,
+    num annualRatePercent,
+    int months, {
+    InterestType method = InterestType.reducing,
+  }) {
+    return calculate(principal, annualRatePercent, months,
+        interestType: method);
+  }
+
+  /// Sum of every installment (the last one absorbs the rounding).
+  static num totalEmi(
+    num principal,
+    num annualRatePercent,
+    int months, {
+    InterestType method = InterestType.reducing,
+  }) {
+    if (principal <= 0 || months <= 0) return _round2(principal);
+    final num emi =
+        monthlyEmi(principal, annualRatePercent, months, method: method);
+    return _round2(emi * months);
+  }
+
+  /// One schedule row: interest, principal and the remaining balance.
+  static Map<String, num> installment({
+    required num principal,
+    required num annualRatePercent,
+    required int month,
+    required int months,
+    required num emi,
+    required num balanceBefore,
+    InterestType method = InterestType.reducing,
+  }) {
+    final num flatInterestPerMonth =
+        principal * (annualRatePercent / 100) * (months / 12) / months;
+    final num interest = method == InterestType.flat
+        ? _round2(flatInterestPerMonth)
+        : _round2(balanceBefore * monthlyRate(annualRatePercent));
+    final num principalPart = month == months
+        ? _round2(balanceBefore - interest)
+        : _round2(emi - interest);
+    return <String, num>{
+      'interest': interest,
+      'principal': principalPart,
+      'balance': _round2(balanceBefore - principalPart),
+    };
+  }
+
   /// Total interest for the loan.
   static num totalInterest(
     num principal,

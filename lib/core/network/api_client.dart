@@ -146,9 +146,19 @@ class ApiClient {
     void Function(int received, int total)? onProgress,
     CancelToken? cancelToken,
   }) async {
+    // `FormData.files` is a List<MapEntry<String, MultipartFile>> and
+    // `FormData.fields` a List<MapEntry<String, String>> -- dio has no
+    // `FormData.file(...)` helper, so the entries are added explicitly.
     final FormData formData = FormData();
-    formData.file(fileField, file);
-    extraFields.forEach((String k, String v) => formData.fields.add(k, v));
+    formData.files.add(MapEntry<String, MultipartFile>(
+      fileField,
+      MultipartFile.fromFileSync(
+        file.path,
+        filename: file.uri.pathSegments.isEmpty ? fileField : file.uri.pathSegments.last,
+      ),
+    ));
+    extraFields.forEach((String k, String v) =>
+        formData.fields.add(MapEntry<String, String>(k, v)));
     try {
       return await dio.post<T>(
         path,

@@ -24,7 +24,7 @@ class NotificationListView extends GetView<NotificationController> {
       title: 'Notifications',
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Mark all read',
             icon: Icons.done_all_outlined,
             variant: AppButtonVariant.outlined,

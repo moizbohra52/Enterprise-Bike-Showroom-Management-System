@@ -73,7 +73,7 @@ class AccountListView extends GetView<AccountController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<AccountModel>(
                     items: controller.items.value,

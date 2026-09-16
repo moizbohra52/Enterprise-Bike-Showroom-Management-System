@@ -87,7 +87,7 @@ class InventoryListView extends GetView<InventoryController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Obx(
-                    child: AppDropdown<String?>(
+                    () => AppDropdown<String?>(
                       label: 'Product',
                       options: controller.productOptions,
                       value: controller.state.filters['product_id'] as String?,
@@ -102,7 +102,7 @@ class InventoryListView extends GetView<InventoryController> {
           const SizedBox(height: 12),
           Expanded(
             child: Obx(
-              child: AppCard(
+              () => AppCard(
                 padding: 8,
                 child: AppTable<InventoryModel>(
                   items: controller.items.value,

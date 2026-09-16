@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  static-checks:
+    name: Static checks (no Dart SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Declarations, members and call signatures
+        run: python3 scripts/dart_verify.py
+
+      - name: GetX Rx values used as plain values
+        run: python3 scripts/dart_rx_check.py
+
+  analyze:
+    name: Analyze & compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (AGP 8 requirement)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter --version
+
+      - run: flutter pub get
+
+      # Errors only: lints/infos are reported but must not fail the build until
+      # the tree has been through a full `dart fix` pass.
+      - name: Analyze
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee analyze.txt
+          status=${PIPESTATUS[0]}
+          set -e
+          exit $status
+
+      # The Actions log viewer is not always reachable from every environment,
+      # so a failing analysis is also published where it can be read by API.
+      - name: Report errors on the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          errors=$(grep -cE '^[[:space:]]*error[[:space:]]' analyze.txt || true)
+          warnings=$(grep -cE '^[[:space:]]*warning[[:space:]]' analyze.txt || true)
+          {
+            echo '### `flutter analyze` — CI run '"$GITHUB_RUN_ID"
+            echo
+            echo "**'"$errors"' error line(s)**, '"$warnings"' warning line(s).'
+            echo
+            echo '```'
+            grep -E '^[[:space:]]*error[[:space:]]' analyze.txt | head -250
+            echo '```'
+            echo
+            echo '<details><summary>full output (tail)</summary>'
+            echo
+            echo '```'
+            tail -60 analyze.txt
+            echo '```'
+            echo
+            echo '</details>'
+          } > report.md
+          head -c 60000 report.md > report_trim.md
+          gh pr comment "$PR_NUMBER" --body-file report_trim.md
+
+      - name: Upload analyze output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyze-output
+          path: analyze.txt
+          if-no-files-found: ignore
+
+      - name: Unit / widget tests
+        if: ${{ hashFiles('test/**_test.dart') != '' }}
+        run: flutter test
+
+  android-debug-apk:
+    name: Android debug APK
+    runs-on: ubuntu-latest
+    needs: [static-checks, analyze]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Placeholder Supabase credentials: development builds fall back to them,
+      # so the APK compiles and boots without secrets in CI.
+      - name: Build
+        run: >
+          flutter build apk --debug
+          --dart-define=ENV=development
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk

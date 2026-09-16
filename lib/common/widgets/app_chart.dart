@@ -257,32 +257,50 @@ class AppPieChart extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                DonutChart(
-                  DonutChartData(
-                    donutHoleRadius: 0.55,
-                    sections: <DonutChartSectionData>[
-                      for (int i = 0; i < slices.length; i++)
-                        DonutChartSectionData(
-                          value: slices[i].value,
-                          color: slices[i].color ??
-                              _defaultColors[i % _defaultColors.length],
-                          title: '',
-                          showTitle: false,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double available = constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : height;
+                final double side = available < height ? available : height;
+                final double radius = side / 2;
+                // 55% of the radius is left empty => donut look.
+                final double holeRadius = radius * 0.55;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    SizedBox(
+                      width: side,
+                      height: side,
+                      child: PieChart(
+                        PieChartData(
+                          startDegreeOffset: -90,
+                          sectionsSpace: 2,
+                          centerSpaceRadius: holeRadius,
+                          sections: <PieChartSectionData>[
+                            for (int i = 0; i < slices.length; i++)
+                              PieChartSectionData(
+                                value: slices[i].value,
+                                color: slices[i].color ??
+                                    _defaultColors[i % _defaultColors.length],
+                                radius: radius - holeRadius,
+                                title: '',
+                                showTitle: false,
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                  duration: const Duration(milliseconds: 300),
-                ),
-                Center(
-                  child: Text(
-                    _compact(total),
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-              ],
+                        duration: const Duration(milliseconds: 300),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        _compact(total),
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(width: 16),
