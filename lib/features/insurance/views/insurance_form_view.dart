@@ -27,11 +27,11 @@ class InsuranceFormView extends GetView<InsuranceFormController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Save Policy',
             icon: Icons.save_outlined,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -194,7 +194,7 @@ class InsuranceFormView extends GetView<InsuranceFormController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit();
     if (ok) {
       AppSnackbar.success(context, 'Policy saved');

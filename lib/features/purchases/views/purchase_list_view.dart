@@ -71,7 +71,7 @@ class PurchaseListView extends GetView<PurchaseController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<PurchaseModel>(
                     items: controller.items.value,

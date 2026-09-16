@@ -94,15 +94,23 @@ class ErrorInterceptor extends Interceptor {
       _attempts[key] = attempt + 1;
       AppLogger.info('HTTP',
           'Retrying ${err.requestOptions.uri.path} (attempt ${attempt + 1})');
-      Future<void>.delayed(const Duration(milliseconds: 500 * (attempt + 1)))
-          .then((_) {
-        handler.resolve(Dio(
-              options: BaseOptions(),
-            ).fetch<dynamic>(err.requestOptions));
-      }).catchError((Object e) {
-        _attempts.remove(key);
-        handler.reject(_toAppDioError(e, err));
-      });
+      // `attempt` is a runtime value, so the backoff Duration cannot be const.
+      Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1))).then(
+        (_) async {
+          try {
+            // handler.resolve() takes a Response, not a Future<Response>.
+            final Response<dynamic> retry =
+                await Dio(options: BaseOptions()).fetch<dynamic>(
+              err.requestOptions,
+            );
+            _attempts.remove(key);
+            handler.resolve(retry);
+          } catch (e) {
+            _attempts.remove(key);
+            handler.reject(_toAppDioError(e, err));
+          }
+        },
+      );
       return;
     }
 

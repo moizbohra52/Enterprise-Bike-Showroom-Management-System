@@ -33,7 +33,7 @@ class InventoryDetailsView extends GetView<InventoryDetailsController> {
           label: 'Adjust Status',
           icon: Icons.edit_note,
           variant: AppButtonVariant.outlined,
-          onPressed: _pickStatus,
+          onPressed: () => _pickStatus(context),
         ),
       ],
       child: Obx(() {
@@ -110,7 +110,7 @@ class InventoryDetailsView extends GetView<InventoryDetailsController> {
     );
   }
 
-  Future<void> _pickStatus() async {
+  Future<void> _pickStatus(BuildContext context) async {
     final String? status = await showDialog<String>(
       context: context,
       builder: (BuildContext dialogContext) => SimpleDialog(

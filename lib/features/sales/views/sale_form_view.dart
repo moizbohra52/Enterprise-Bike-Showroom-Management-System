@@ -30,11 +30,11 @@ class SaleFormView extends GetView<SaleFormController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Complete Sale',
             icon: Icons.check_circle_outline,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -92,7 +92,7 @@ class SaleFormView extends GetView<SaleFormController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit(delivery: controller.buildDelivery());
     if (ok) {
       AppSnackbar.success(context, 'Sale completed');

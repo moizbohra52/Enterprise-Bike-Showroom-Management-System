@@ -240,12 +240,12 @@ class _Schedule extends GetView<LoanDetailsController> {
       title: 'EMI Schedule',
       actions: <Widget>[
         TextButton(
-          onPressed: _receipt,
+          onPressed: () => _receipt(context),
           child: const Text('PDF'),
         ),
       ],
       child: Obx(
-        child: AppTable<EmiScheduleModel>(
+        () => AppTable<EmiScheduleModel>(
           items: controller.schedule.value,
           keyOf: (EmiScheduleModel r) => '${r.loanId}-${r.installmentNo}',
           info: const PageInfo(page: 1, pageSize: 100, total: 100),
@@ -299,7 +299,7 @@ class _Schedule extends GetView<LoanDetailsController> {
     );
   }
 
-  Future<void> _receipt() async {
+  Future<void> _receipt(BuildContext context) async {
     final LoanModel loan = controller.loan.value!;
     final PdfService pdf = Get.find<PdfService>();
     try {

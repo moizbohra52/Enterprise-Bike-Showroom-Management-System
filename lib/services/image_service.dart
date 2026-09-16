@@ -6,6 +6,7 @@ import 'package:enterprise_bike_showroom/config/supabase_config.dart';
 import 'package:enterprise_bike_showroom/core/errors/app_exception.dart';
 import 'package:enterprise_bike_showroom/core/helpers/logger.dart';
 import 'package:enterprise_bike_showroom/core/utils/id_generator.dart';
+import 'package:enterprise_bike_showroom/services/storage_service.dart';
 import 'package:image/image.dart' as img;
 
 /// Centralized image handling:

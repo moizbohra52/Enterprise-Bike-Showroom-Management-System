@@ -15,7 +15,9 @@ import 'package:enterprise_bike_showroom/features/showroom/controllers/showroom_
 
 /// Add / edit showroom form.
 class ShowroomFormView extends GetView<ShowroomController> {
-  const ShowroomFormView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  ShowroomFormView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +29,11 @@ class ShowroomFormView extends GetView<ShowroomController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: isEdit ? 'Save Changes' : 'Create Showroom',
             icon: Icons.save_outlined,
-            isLoading: _saving,
-            onPressed: _saving ? null : () => _submit(isEdit, id),
+            isLoading: _saving.value,
+            onPressed: _saving.value ? null : () => _submit(context, isEdit, id),
           ),
         ),
       ],
@@ -159,7 +161,7 @@ class ShowroomFormView extends GetView<ShowroomController> {
     );
   }
 
-  Future<void> _submit(bool isEdit, String? id) async {
+  Future<void> _submit(BuildContext context, bool isEdit, String? id) async {
     if (!_formKey.currentState!.validate()) return;
     _saving.value = true;
     final Map<String, dynamic> payload = <String, dynamic>{

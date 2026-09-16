@@ -7,6 +7,7 @@ class NotificationModel extends BaseModel {
   NotificationModel({
     super.id,
     super.createdAt,
+    super.updatedAt,
     this.showroomId,
     this.customerId,
     this.title = '',

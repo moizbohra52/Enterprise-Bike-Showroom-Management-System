@@ -202,7 +202,7 @@ class AppPages {
     ),
     _page(
       AppRoutes.showroomForm,
-      () => const ShowroomFormView(),
+      () => ShowroomFormView(),
       binding: ShowroomBinding(),
       middlewares: _guard(Permissions.showroomView),
     ),
@@ -245,7 +245,7 @@ class AppPages {
     ),
     _page(
       AppRoutes.productForm,
-      () => const ProductFormView(),
+      () => ProductFormView(),
       binding: ProductBinding(),
       middlewares: _guard(Permissions.productsView),
     ),
@@ -269,19 +269,19 @@ class AppPages {
     ),
     _page(
       AppRoutes.stockIn,
-      () => const StockInView(),
+      () => StockInView(),
       binding: InventoryBinding(),
       middlewares: _guard(Permissions.inventoryCreate),
     ),
     _page(
       AppRoutes.stockTransfer,
-      () => const StockTransferView(),
+      () => StockTransferView(),
       binding: InventoryBinding(),
       middlewares: _guard(Permissions.inventoryTransfer),
     ),
     _page(
       AppRoutes.stockAdjust,
-      () => const StockAdjustView(),
+      () => StockAdjustView(),
       binding: InventoryBinding(),
       middlewares: _guard(Permissions.inventoryAdjust),
     ),
@@ -311,7 +311,7 @@ class AppPages {
     ),
     _page(
       AppRoutes.supplierForm,
-      () => const SupplierFormView(),
+      () => SupplierFormView(),
       binding: PurchaseBinding(),
       middlewares: _guard(Permissions.purchasesView),
     ),
@@ -328,7 +328,7 @@ class AppPages {
     ),
     _page(
       AppRoutes.customerForm,
-      () => const CustomerFormView(),
+      () => CustomerFormView(),
       binding: CustomerBinding(),
       middlewares: _guard(Permissions.customersView),
     ),
@@ -389,7 +389,7 @@ class AppPages {
     ),
     _page(
       AppRoutes.paymentForm,
-      () => const PaymentFormView(),
+      () => PaymentFormView(),
       binding: PaymentBinding(),
       middlewares: _guard(Permissions.paymentsCreate),
     ),

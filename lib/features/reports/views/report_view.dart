@@ -36,24 +36,24 @@ class ReportView extends GetView<ReportViewController> {
               label: 'CSV',
               icon: Icons.grid_on,
               variant: AppButtonVariant.outlined,
-              isLoading: controller.exporting,
-              onPressed: () => _export('csv'),
+              isLoading: controller.exporting.value,
+              onPressed: () => _export(context, 'csv'),
             )),
         const SizedBox(width: 8),
         Obx(() => AppButton(
               label: 'Excel',
               icon: Icons.table_chart_outlined,
               variant: AppButtonVariant.outlined,
-              isLoading: controller.exporting,
-              onPressed: () => _export('excel'),
+              isLoading: controller.exporting.value,
+              onPressed: () => _export(context, 'excel'),
             )),
         const SizedBox(width: 8),
         Obx(() => AppButton(
               label: 'PDF',
               icon: Icons.picture_as_pdf,
               variant: AppButtonVariant.outlined,
-              isLoading: controller.exporting,
-              onPressed: () => _export('pdf'),
+              isLoading: controller.exporting.value,
+              onPressed: () => _export(context, 'pdf'),
             )),
         const SizedBox(width: 8),
         Obx(() => AppButton(
@@ -147,7 +147,7 @@ class ReportView extends GetView<ReportViewController> {
         c.contains('days');
   }
 
-  Future<void> _export(String format) async {
+  Future<void> _export(BuildContext context, String format) async {
     final ReportDefinition? d = controller.definition.value;
     if (d == null) return;
     final ExportService export = Get.find<ExportService>();

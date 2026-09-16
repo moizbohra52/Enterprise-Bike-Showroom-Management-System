@@ -108,7 +108,7 @@ class _ExpenseListViewState extends State<ExpenseListView> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<ExpenseModel>(
                     items: controller.items.value,

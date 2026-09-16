@@ -17,7 +17,9 @@ import 'package:enterprise_bike_showroom/features/customers/models/customer_mode
 
 /// Add / edit customer.
 class CustomerFormView extends GetView<CustomerController> {
-  const CustomerFormView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  CustomerFormView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +32,11 @@ class CustomerFormView extends GetView<CustomerController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: isEdit ? 'Save Changes' : 'Create Customer',
             icon: Icons.save_outlined,
-            isLoading: saving,
-            onPressed: saving ? null : () => _submit(isEdit, id),
+            isLoading: saving.value,
+            onPressed: saving.value ? null : () => _submit(context, isEdit, id),
           ),
         ),
       ],
@@ -179,7 +181,7 @@ class CustomerFormView extends GetView<CustomerController> {
     );
   }
 
-  Future<void> _submit(bool isEdit, String? id) async {
+  Future<void> _submit(BuildContext context, bool isEdit, String? id) async {
     if (!_formKey.currentState!.validate()) return;
     _saving.value = true;
     final Map<String, dynamic> payload = <String, dynamic>{

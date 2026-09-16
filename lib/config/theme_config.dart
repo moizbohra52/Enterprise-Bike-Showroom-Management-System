@@ -177,7 +177,7 @@ class AppTheme {
       brightness: brightness,
     );
 
-    final BaseThemeData base = ThemeData(
+    final ThemeData base = ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,

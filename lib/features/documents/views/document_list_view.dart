@@ -77,7 +77,7 @@ class DocumentListView extends GetView<AttachmentController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<AttachmentModel>(
                     items: controller.items.value,
@@ -124,7 +124,7 @@ class DocumentListView extends GetView<AttachmentController> {
                         value: (AttachmentModel a) => IconButton(
                           icon: const Icon(Icons.delete_outline, size: 18),
                           color: const Color(0xFFDC2626),
-                          onPressed: () => _remove(a),
+                          onPressed: () => _remove(context, a),
                         ),
                       ),
                     ],
@@ -138,7 +138,7 @@ class DocumentListView extends GetView<AttachmentController> {
     );
   }
 
-  Future<void> _remove(AttachmentModel a) async {
+  Future<void> _remove(BuildContext context, AttachmentModel a) async {
     final bool ok = await AppDialog.confirm(
       context,
       title: 'Delete document',

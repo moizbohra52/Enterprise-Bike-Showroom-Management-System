@@ -43,7 +43,7 @@ class WarrantyDetailsView extends GetView<WarrantyDetailsController> {
           return AppButton(
             label: 'Raise Claim',
             icon: Icons.report_outlined,
-            onPressed: _raiseClaim,
+            onPressed: () => _raiseClaim(context),
           );
         }),
       ],
@@ -53,7 +53,7 @@ class WarrantyDetailsView extends GetView<WarrantyDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(),
+          child: _body(context),
         );
       }),
     );
@@ -68,7 +68,7 @@ class WarrantyDetailsView extends GetView<WarrantyDetailsController> {
     return null;
   }
 
-  Future<void> _raiseClaim() async {
+  Future<void> _raiseClaim(BuildContext context) async {
     final WarrantyModel warranty = controller.warranty.value!;
     final String? description = await AppDialog.prompt(
       context,
@@ -83,7 +83,7 @@ class WarrantyDetailsView extends GetView<WarrantyDetailsController> {
     if (ok) AppSnackbar.success(context, 'Claim submitted');
   }
 
-  Widget _body() {
+  Widget _body(BuildContext context) {
     final WarrantyModel warranty = controller.warranty.value!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

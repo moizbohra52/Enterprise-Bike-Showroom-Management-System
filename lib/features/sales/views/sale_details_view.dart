@@ -57,8 +57,8 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
                 AppButton(
                   label: 'Cancel Sale',
                   icon: Icons.cancel_outlined,
-                  variant: AppButtonVariant.error,
-                  onPressed: () => _confirmCancel(sale),
+                  variant: AppButtonVariant.danger,
+                  onPressed: () => _confirmCancel(context, sale),
                 ),
             ],
           );
@@ -70,7 +70,7 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.sale.value!),
+          child: _body(context, controller.sale.value!),
         );
       }),
     );
@@ -85,7 +85,7 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
     return null;
   }
 
-  Future<void> _confirmCancel(SaleModel sale) async {
+  Future<void> _confirmCancel(BuildContext context, SaleModel sale) async {
     final String? reason = await AppDialog.prompt(
       context,
       title: 'Cancel Sale ${sale.saleNumber}',
@@ -104,7 +104,7 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
     }
   }
 
-  Widget _body(SaleModel sale) {
+  Widget _body(BuildContext context, SaleModel sale) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

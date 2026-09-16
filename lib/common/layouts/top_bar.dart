@@ -121,7 +121,8 @@ class TopBarActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         if (desktop)
-          const SizedBox(
+          // Not const: onSearch is a closure capturing `context`.
+          SizedBox(
             width: 320,
             child: AppSearchField(
               hint: 'Search customers, bikes, invoices…',

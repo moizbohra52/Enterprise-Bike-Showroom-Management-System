@@ -4,8 +4,12 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
-  flutter: '>=3.22.0'
+  # Dart 3.6+ / Flutter 3.27+ are the real floors: lib/config/theme_config.dart
+  # uses CardThemeData / DialogThemeData / TabBarThemeData, which were introduced
+  # in Flutter 3.27 (they are still the correct types on 3.35+, where
+  # ThemeData.cardTheme stopped accepting the old CardTheme).
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: '>=3.27.0'
 
 dependencies:
   flutter:

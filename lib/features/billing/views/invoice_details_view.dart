@@ -44,14 +44,14 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
                 label: 'PDF',
                 icon: Icons.picture_as_pdf,
                 variant: AppButtonVariant.outlined,
-                onPressed: () => _downloadPdf(invoice),
+                onPressed: () => _downloadPdf(context, invoice),
               ),
               const SizedBox(width: 8),
               AppButton(
                 label: 'Print',
                 icon: Icons.print_outlined,
                 variant: AppButtonVariant.outlined,
-                onPressed: () => _printPdf(invoice),
+                onPressed: () => _printPdf(context, invoice),
               ),
               const SizedBox(width: 8),
               if (session.can(Permissions.paymentsCreate) &&
@@ -60,7 +60,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
                 AppButton(
                   label: 'Receive Payment',
                   icon: Icons.payments_outlined,
-                  onPressed: () => _paySheet(invoice),
+                  onPressed: () => _paySheet(context, invoice),
                 ),
             ],
           );
@@ -72,7 +72,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
         }
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: _body(controller.invoice.value!),
+          child: _body(context, controller.invoice.value!),
         );
       }),
     );
@@ -87,7 +87,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
     return null;
   }
 
-  Future<void> _downloadPdf(InvoiceModel invoice) async {
+  Future<void> _downloadPdf(BuildContext context, InvoiceModel invoice) async {
     final PdfService pdf = Get.find<PdfService>();
     try {
       final String path = await pdf.invoicePdf(_data(invoice)).then(
@@ -99,7 +99,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
     }
   }
 
-  Future<void> _printPdf(InvoiceModel invoice) async {
+  Future<void> _printPdf(BuildContext context, InvoiceModel invoice) async {
     final PdfService pdf = Get.find<PdfService>();
     try {
       await pdf.invoicePdf(_data(invoice)).then(
@@ -139,7 +139,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
     );
   }
 
-  Future<void> _paySheet(InvoiceModel invoice) async {
+  Future<void> _paySheet(BuildContext context, InvoiceModel invoice) async {
     final num outstanding = invoice.outstandingAmount;
     final String? reference = await AppDialog.prompt(
       context,
@@ -186,7 +186,7 @@ class InvoiceDetailsView extends GetView<InvoiceDetailsController> {
     );
   }
 
-  Widget _body(InvoiceModel invoice) {
+  Widget _body(BuildContext context, InvoiceModel invoice) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

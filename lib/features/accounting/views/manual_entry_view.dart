@@ -26,11 +26,11 @@ class ManualEntryView extends GetView<ManualEntryController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: 'Post Entry',
             icon: Icons.check_circle_outline,
-            isLoading: controller.saving,
-            onPressed: () => _submit(),
+            isLoading: controller.saving.value,
+            onPressed: () => _submit(context),
           ),
         ),
       ],
@@ -104,11 +104,10 @@ class ManualEntryView extends GetView<ManualEntryController> {
                 child: Row(
                   children: <Widget>[
                     Expanded(
-                      child: _total('Total Debit', controller.totalDebit),
+                      child: _total(context, 'Total Debit', controller.totalDebit),
                     ),
                     Expanded(
-                      child: _total(
-                          'Total Credit', controller.totalCredit),
+                      child: _total(context, 'Total Credit', controller.totalCredit),
                     ),
                     const SizedBox(width: 12),
                     Container(
@@ -141,7 +140,7 @@ class ManualEntryView extends GetView<ManualEntryController> {
     );
   }
 
-  Widget _total(String label, num value) {
+  Widget _total(BuildContext context, String label, num value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -155,7 +154,7 @@ class ManualEntryView extends GetView<ManualEntryController> {
     );
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
     final bool ok = await controller.submit();
     if (ok) {
       AppSnackbar.success(context, 'Entry posted');

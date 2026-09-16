@@ -78,7 +78,7 @@ class AuditLogView extends GetView<AuditController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<AuditLogModel>(
                     items: controller.items.value,

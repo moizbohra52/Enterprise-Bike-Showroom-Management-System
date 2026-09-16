@@ -18,7 +18,9 @@ import 'package:enterprise_bike_showroom/features/purchases/repositories/purchas
 
 /// Add / edit supplier.
 class SupplierFormView extends GetView<SupplierController> {
-  const SupplierFormView({super.key});
+  // Not const: this widget owns mutable state (Rx / TextEditingController),
+  // and a const constructor cannot have initialized instance fields.
+  SupplierFormView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +34,11 @@ class SupplierFormView extends GetView<SupplierController> {
       showBack: true,
       actions: <Widget>[
         Obx(
-          child: AppButton(
+          () => AppButton(
             label: isEdit ? 'Save Changes' : 'Create Supplier',
             icon: Icons.save_outlined,
-            isLoading: saving,
-            onPressed: saving ? null : () => _submit(isEdit, id),
+            isLoading: saving.value,
+            onPressed: saving.value ? null : () => _submit(context, isEdit, id),
           ),
         ),
       ],
@@ -184,7 +186,7 @@ class SupplierFormView extends GetView<SupplierController> {
     );
   }
 
-  Future<void> _submit(bool isEdit, String? id) async {
+  Future<void> _submit(BuildContext context, bool isEdit, String? id) async {
     if (!_formKey.currentState!.validate()) return;
     _saving.value = true;
     final Map<String, dynamic> payload = <String, dynamic>{

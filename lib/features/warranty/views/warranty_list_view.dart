@@ -57,7 +57,7 @@ class WarrantyListView extends GetView<WarrantyController> {
             const SizedBox(height: 12),
             Expanded(
               child: Obx(
-                child: AppCard(
+                () => AppCard(
                   padding: 8,
                   child: AppTable<WarrantyModel>(
                     items: controller.items.value,
