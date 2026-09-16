@@ -7,24 +7,35 @@ plugins {
 
 android {
     namespace = "com.enterprise.bikeshowroom"
-    compileSdk = flutter.compileSdkVersion
+
+    // `flutter.compileSdkVersion` is whatever the installed Flutter SDK
+    // defaults to, and older SDKs still default to 34. The AndroidX / Firebase /
+    // plugin artifacts that `pub` resolves today publish a `minCompileSdk` in
+    // their AAR metadata, so a lower value fails the build with
+    // `:app:checkDebugAarMetadata` ("The minCompileSdk (35) specified in a
+    // dependency's AAR metadata is greater than this module's compileSdkVersion").
+    // Keep the SDK default when it is already newer.
+    compileSdk = maxOf(flutter.compileSdkVersion, 35)
     ndkVersion = flutter.ndkVersion
 
+    // AGP 8 needs JDK 17 to run and current AndroidX artifacts ship Java 17
+    // bytecode; Java and Kotlin must agree or Gradle fails with
+    // "Inconsistent JVM-target compatibility detected".
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.enterprise.bikeshowroom"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // 21 is the Flutter floor, but flutter_secure_storage / permission_handler /
+        // printing / image_picker and AndroidX itself keep raising theirs; 23
+        // (Android 6.0) keeps the manifest merger quiet for this app's audience.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

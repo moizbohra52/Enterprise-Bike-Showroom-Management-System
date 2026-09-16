@@ -4,8 +4,12 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
-  flutter: '>=3.22.0'
+  # Dart 3.6+ / Flutter 3.27+ are the real floors: lib/config/theme_config.dart
+  # uses CardThemeData / DialogThemeData / TabBarThemeData, which were introduced
+  # in Flutter 3.27 (they are still the correct types on 3.35+, where
+  # ThemeData.cardTheme stopped accepting the old CardTheme).
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: '>=3.27.0'
 
 dependencies:
   flutter:
@@ -38,7 +42,10 @@ dependencies:
   flutter_secure_storage: ^9.2.2
 
   # Utilities
-  intl: 0.19.0
+  # `flutter_localizations` pins `intl` to an exact version per Flutter SDK
+  # (0.19.0 up to 3.24, 0.20.x from 3.27), so a hard pin here makes
+  # `flutter pub get` unsolvable on any other SDK. Keep it a range.
+  intl: '>=0.19.0 <0.21.0'
   uuid: ^4.3.3
   connectivity_plus: ^6.0.3
   permission_handler: ^11.3.1

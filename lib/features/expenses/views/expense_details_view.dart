@@ -47,7 +47,7 @@ class ExpenseDetailsView extends GetView<ExpenseDetailsController> {
               AppButton(
                 label: 'Reject',
                 icon: Icons.cancel_outlined,
-                variant: AppButtonVariant.error,
+                variant: AppButtonVariant.danger,
                 onPressed: _reject,
               ),
               const SizedBox(width: 8),

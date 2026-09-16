@@ -4,7 +4,7 @@ import 'package:enterprise_bike_showroom/common/models/dropdown_option.dart';
 
 /// Horizontal filter strip; wraps on mobile, stays in a row on desktop.
 class AppFilterBar extends StatelessWidget {
-  const AppFilterBar({super.key, this.children});
+  const AppFilterBar({super.key, this.children = const <Widget>[]});
 
   final List<Widget> children;
 

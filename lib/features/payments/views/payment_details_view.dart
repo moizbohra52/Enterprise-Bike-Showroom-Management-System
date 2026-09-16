@@ -53,7 +53,7 @@ class PaymentDetailsView extends GetView<PaymentDetailsController> {
                 AppButton(
                   label: 'Refund',
                   icon: Icons.undo,
-                  variant: AppButtonVariant.error,
+                  variant: AppButtonVariant.danger,
                   onPressed: () => _confirmRefund(payment),
                 ),
             ],

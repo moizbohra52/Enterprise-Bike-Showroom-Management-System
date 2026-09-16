@@ -13,7 +13,12 @@ import 'package:enterprise_bike_showroom/features/products/repositories/product_
 /// Supplier list controller.
 class SupplierController extends BaseListController<SupplierModel> {
   SupplierController(PurchaseRepository repository)
-      : super(repository.listSuppliers, pageSize: 20);
+      : super(repository.listSuppliers, pageSize: 20) {
+    this.repository = repository;
+  }
+
+  /// Kept as a field: `super()` only receives the loader function.
+  late final PurchaseRepository repository;
 
   @override
   Future<void> onInit() async {

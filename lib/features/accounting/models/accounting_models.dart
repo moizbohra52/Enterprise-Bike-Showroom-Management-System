@@ -62,11 +62,11 @@ class JournalLineModel {
   JournalLineModel({
     this.id,
     this.entryId,
-    required this.accountId,
+    this.accountId = '',
     this.accountName = '',
     this.accountCode = '',
     this.side = 'debit',
-    required this.amount = 0,
+    this.amount = 0,
     this.notes = '',
   });
 
@@ -116,7 +116,7 @@ class JournalEntryModel extends BaseModel {
     this.showroomId,
     required this.entryNumber,
     this.entryDate,
-    required this.narration = '',
+    this.narration = '',
     this.sourceModule,
     this.sourceId,
     this.totalDebit = 0,

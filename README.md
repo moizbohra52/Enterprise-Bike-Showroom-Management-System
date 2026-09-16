@@ -46,6 +46,34 @@ Staging/production builds refuse to start without real values. See
 Release builds: `flutter build apk|web|windows --release` with
 `--dart-define=ENV=production`.
 
+## Android build notes
+
+* AGP 8 runs on **JDK 17** — Android Studio's embedded JDK is fine; a plain
+  `JAVA_HOME` pointing at JDK 8/11 is not. Java and Kotlin targets are both 17
+  in `android/app/build.gradle.kts`.
+* `compileSdk` is `maxOf(flutter.compileSdkVersion, 35)` and `minSdk` is
+  `maxOf(flutter.minSdkVersion, 23)`: the AndroidX/Firebase/plugin artifacts
+  pub resolves today declare `minCompileSdk`/`minSdkVersion` above what Flutter
+  3.22–3.24 defaults to, which otherwise fails
+  `:app:checkDebugAarMetadata` or the manifest merger. A newer Flutter SDK still
+  wins (the `maxOf` only raises the floor).
+* Building against API 35 for the first time needs that platform installed:
+  `sdkmanager "platforms;android-35"` or `flutter doctor --android-licenses`.
+* `intl` is a range, not a pin — `flutter_localizations` pins it to an exact
+  version per Flutter SDK, so pinning it in `pubspec.yaml` breaks `pub get` on
+  every other SDK.
+* CI (`.github/workflows/ci.yml`) runs `flutter pub get`, `flutter analyze`
+  (errors fail, lints do not yet) and `flutter build apk --debug` on every push
+  and pull request. Run those locally before pushing.
+* `python3 scripts/dart_verify.py` is the no-toolchain fallback: it statically
+  checks imports, members, call signatures and declaration legality across
+  `lib/` and exits non-zero on findings. `flutter analyze` is still the real
+  check; this one runs where no Flutter SDK exists.
+
+When a build fails, the interesting part of the log is the `* What went wrong:`
+block (for Dart errors, the first `Error:` line above it). Get it with
+`flutter build apk --debug --stacktrace` rather than reading the Gradle summary.
+
 ## Layout
 
 ```

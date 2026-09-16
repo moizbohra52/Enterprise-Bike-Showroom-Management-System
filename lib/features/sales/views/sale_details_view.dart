@@ -57,7 +57,7 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
                 AppButton(
                   label: 'Cancel Sale',
                   icon: Icons.cancel_outlined,
-                  variant: AppButtonVariant.error,
+                  variant: AppButtonVariant.danger,
                   onPressed: () => _confirmCancel(sale),
                 ),
             ],
