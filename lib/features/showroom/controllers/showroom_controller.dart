@@ -26,14 +26,14 @@ class ShowroomController extends BaseListController<ShowroomModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 
   Future<void> openForm({String? id}) async {
     await Get.toNamed(
       AppRoutes.showroomForm,
-      parameters: <String, String?>{
+      parameters: <String, String>{
         if (id != null) 'id': id,
       },
     );
@@ -42,6 +42,6 @@ class ShowroomController extends BaseListController<ShowroomModel> {
 
   Future<void> openDetails(ShowroomModel showroom) async {
     await Get.toNamed(AppRoutes.showroomDetails,
-        parameters: <String, String?>{'id': showroom.id});
+        parameters: <String, String>{'id': showroom.id!});
   }
 }

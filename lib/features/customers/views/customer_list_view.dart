@@ -14,6 +14,7 @@ import 'package:enterprise_bike_showroom/core/constants/permission_constants.dar
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/customers/controllers/customer_controller.dart';
 import 'package:enterprise_bike_showroom/features/customers/models/customer_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Customer directory (desktop grid / mobile cards).
 class CustomerListView extends GetView<CustomerController> {
@@ -24,7 +25,7 @@ class CustomerListView extends GetView<CustomerController> {
     return AppShell(
       title: 'Customers',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.customersCreate,
           child: AppButton(
             label: 'Add Customer',

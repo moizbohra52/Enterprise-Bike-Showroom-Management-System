@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/purchases/controllers/purchase_controller.dart';
 import 'package:enterprise_bike_showroom/features/purchases/models/purchase_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Purchase register.
 class PurchaseListView extends GetView<PurchaseController> {
@@ -25,7 +26,7 @@ class PurchaseListView extends GetView<PurchaseController> {
     return AppShell(
       title: 'Purchases',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.purchasesCreate,
           child: AppButton(
             label: 'New Purchase',
@@ -138,5 +139,5 @@ class PurchaseListView extends GetView<PurchaseController> {
   }
 
   void _new() =>
-      Get.toNamed(AppRoutes.purchaseForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.purchaseForm)?.then((_) => controller.refresh());
 }

@@ -41,7 +41,7 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Theme theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
 
     final double h = switch (size) {
@@ -66,19 +66,16 @@ class AppButton extends StatelessWidget {
                 Icon(icon, size: fontSize + 4),
                 const SizedBox(width: 8),
               ],
-              Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Flexible(
+                  child: Text(label,
+                      maxLines: 1, overflow: TextOverflow.ellipsis)),
             ],
           );
 
-    final Widget? inner = icon != null
-        ? Padding(
-            padding: EdgeInsets.symmetric(horizontal: expanded ? 0 : 12, vertical: 0),
-            child: child,
-          )
-        : Padding(
-            padding: EdgeInsets.symmetric(horizontal: expanded ? 0 : 20, vertical: 0),
-            child: child,
-          );
+    final Widget inner = Padding(
+      padding: EdgeInsets.symmetric(horizontal: expanded ? 0 : (icon != null ? 12 : 20), vertical: 0),
+      child: child,
+    );
 
     switch (variant) {
       case AppButtonVariant.filled:
@@ -87,15 +84,15 @@ class AppButton extends StatelessWidget {
           width: expanded ? double.infinity : null,
           child: ElevatedButton(
             onPressed: isLoading ? null : onPressed,
-            child: inner,
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
-              backgroundColor:
-                  variant == AppButtonVariant.danger ? null : colors.primary,
+              backgroundColor: colors.primary,
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
-              textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+              textStyle:
+                  TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
             ),
+            child: inner,
           ),
         );
       case AppButtonVariant.danger:
@@ -104,14 +101,15 @@ class AppButton extends StatelessWidget {
           width: expanded ? double.infinity : null,
           child: ElevatedButton(
             onPressed: isLoading ? null : onPressed,
-            child: inner,
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
               backgroundColor: const Color(0xFFDC2626),
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
-              textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+              textStyle:
+                  TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
             ),
+            child: inner,
           ),
         );
       case AppButtonVariant.tonal:
@@ -120,12 +118,13 @@ class AppButton extends StatelessWidget {
           width: expanded ? double.infinity : null,
           child: FilledButton.tonal(
             onPressed: isLoading ? null : onPressed,
-            child: inner,
             style: FilledButton.styleFrom(
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
-              textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+              textStyle:
+                  TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
             ),
+            child: inner,
           ),
         );
       case AppButtonVariant.outlined:
@@ -134,12 +133,13 @@ class AppButton extends StatelessWidget {
           width: expanded ? double.infinity : null,
           child: OutlinedButton(
             onPressed: isLoading ? null : onPressed,
-            child: inner,
             style: OutlinedButton.styleFrom(
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
-              textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+              textStyle:
+                  TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
             ),
+            child: inner,
           ),
         );
       case AppButtonVariant.text:
@@ -148,12 +148,13 @@ class AppButton extends StatelessWidget {
           width: expanded ? double.infinity : null,
           child: TextButton(
             onPressed: isLoading ? null : onPressed,
-            child: inner,
             style: TextButton.styleFrom(
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
-              textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+              textStyle:
+                  TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
             ),
+            child: inner,
           ),
         );
     }

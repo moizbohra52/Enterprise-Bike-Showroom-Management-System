@@ -143,7 +143,7 @@ class UsersController extends GetxController {
   Future<void> openForm({String? id}) async {
     await Get.toNamed(
       AppRoutes.userForm,
-      parameters: <String, String?>{
+      parameters: <String, String>{
         if (id != null) 'id': id,
       },
     );
@@ -153,7 +153,7 @@ class UsersController extends GetxController {
   Future<void> openDetails(UserModel user) async {
     await Get.toNamed(
       AppRoutes.userDetails,
-      parameters: <String, String?>{'id': user.id},
+      parameters: <String, String>{'id': user.id!},
     );
     await refresh();
   }

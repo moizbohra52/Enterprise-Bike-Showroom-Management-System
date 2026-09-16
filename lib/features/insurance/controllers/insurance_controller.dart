@@ -13,7 +13,7 @@ class InsuranceController extends BaseListController<InsurancePolicyModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

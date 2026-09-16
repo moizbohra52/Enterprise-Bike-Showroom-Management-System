@@ -17,6 +17,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/finance/controllers/loan_controller.dart';
 import 'package:enterprise_bike_showroom/features/finance/models/loan_models.dart';
 import 'package:enterprise_bike_showroom/services/pdf_service.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Loan 360: summary + full EMI schedule + receive-EMI action.
 class LoanDetailsView extends GetView<LoanDetailsController> {

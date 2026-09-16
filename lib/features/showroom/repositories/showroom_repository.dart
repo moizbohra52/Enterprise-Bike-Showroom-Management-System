@@ -19,10 +19,9 @@ class ShowroomRepository {
 
   Future<PaginatedResponse<ShowroomModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table(_table)
-          .select('*', count: CountOption.exact)
-          .range(query.offset, query.end);
+          .select('*');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or('name.ilike.%$term%,code.ilike.%$term%,city.ilike.%$term%');
@@ -32,7 +31,8 @@ class ShowroomRepository {
       builder = query.orderBy == null
           ? builder.order('code', ascending: true)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<ShowroomModel>.fromSupabase(
@@ -51,7 +51,7 @@ class ShowroomRepository {
       final dynamic rows =
           await supabase.table(_table).select().eq('status', 'active').order('name');
       return <ShowroomModel>[
-        for (final dynamic r in SafeJson.asList(rows))
+        for (final dynamic r in SafeJson.asList(rows));
           if (r is Map) ShowroomModel.fromJson(SafeJson.asMap(r)),
       ];
     } catch (e) {

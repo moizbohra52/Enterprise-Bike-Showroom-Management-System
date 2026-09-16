@@ -13,9 +13,11 @@ class EnvironmentConfig {
   EnvironmentConfig._();
 
   /// Selected environment name (`ENV` dart-define, default `development`).
+  /// Default is a string literal — enum `.name` is not a compile-time constant
+  /// usable inside `String.fromEnvironment`.
   static const String _envName = String.fromEnvironment(
     'ENV',
-    defaultValue: AppEnvironment.development.name,
+    defaultValue: 'development',
   );
 
   /// Supabase project URL (`SUPABASE_URL` dart-define).

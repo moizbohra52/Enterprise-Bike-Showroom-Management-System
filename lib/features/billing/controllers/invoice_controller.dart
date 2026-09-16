@@ -12,7 +12,7 @@ class InvoiceController extends BaseListController<InvoiceModel> {
 
   @override
   Future<void> onInit() async {
-    await super.onInit();
+    super.onInit();
     refresh();
   }
 }

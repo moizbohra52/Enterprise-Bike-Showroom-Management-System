@@ -23,10 +23,15 @@ import 'package:enterprise_bike_showroom/features/products/models/product_models
 import 'package:enterprise_bike_showroom/services/image_service.dart';
 
 /// Add / edit product with colors + images.
-class ProductFormView extends GetView<ProductController> {
-  // Not const: this widget owns mutable state (Rx / TextEditingController),
-  // and a const constructor cannot have initialized instance fields.
+class ProductFormView extends StatefulWidget {
   ProductFormView({super.key});
+
+  @override
+  State<ProductFormView> createState() => _ProductFormViewState();
+}
+
+class _ProductFormViewState extends State<ProductFormView> {
+  ProductController get controller => Get.find<ProductController>();
 
   @override
   Widget build(BuildContext context) {

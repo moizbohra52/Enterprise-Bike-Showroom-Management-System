@@ -64,7 +64,7 @@ class AppMenu {
     AppMenuItem(
       id: 'products',
       label: 'Products',
-      icon: Icons.pedals_outlined,
+      icon: Icons.two_wheeler,
       route: '/products',
       permission: Permissions.productsView,
       group: 'catalog',

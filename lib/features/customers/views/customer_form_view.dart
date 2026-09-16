@@ -68,8 +68,8 @@ class CustomerFormView extends GetView<CustomerController> {
     'notes': TextEditingController(),
   };
 
-  String _type = 'retail';
-  String _status = 'active';
+  final RxString _type = 'retail'.obs;
+  final RxString _status = 'active'.obs;
 
   void _apply(CustomerModel? c) {
     if (c == null) return;
@@ -82,8 +82,8 @@ class CustomerFormView extends GetView<CustomerController> {
     _fields['state']?.text = c.state;
     _fields['pincode']?.text = c.pincode;
     _fields['notes']?.text = c.notes;
-    _type = c.customerType;
-    _status = c.status;
+    _type.value = c.customerType;
+    _status.value = c.status;
   }
 
   Widget _form() {
@@ -123,7 +123,7 @@ class CustomerFormView extends GetView<CustomerController> {
                     _field('pincode', 'Pincode',
                         keyboardType: TextInputType.number,
                         validator: (String? v) => AppValidators.pincode(v)),
-                    AppDropdown<String>(
+                    Obx(() => AppDropdown<String>(
                       label: 'Customer Type',
                       options: const <DropdownOption<String>>[
                         DropdownOption(value: 'retail', label: 'Retail'),
@@ -131,22 +131,22 @@ class CustomerFormView extends GetView<CustomerController> {
                         DropdownOption(value: 'corporate', label: 'Corporate'),
                         DropdownOption(value: 'financier', label: 'Financier'),
                       ],
-                      value: _type,
+                      value: _type.value,
                       onChanged: (String? value) =>
-                          setState(() => _type = value ?? 'retail'),
-                    ),
+                          _type.value = value ?? 'retail',
+                    )),
                     const SizedBox(height: 12),
-                    AppDropdown<String>(
+                    Obx(() => AppDropdown<String>(
                       label: 'Status',
                       options: const <DropdownOption<String>>[
                         DropdownOption(value: 'active', label: 'Active'),
                         DropdownOption(value: 'inactive', label: 'Inactive'),
                         DropdownOption(value: 'blocked', label: 'Blocked'),
                       ],
-                      value: _status,
+                      value: _status.value,
                       onChanged: (String? value) =>
-                          setState(() => _status = value ?? 'active'),
-                    ),
+                          _status.value = value ?? 'active',
+                    )),
                   ],
                 ),
               ),
@@ -193,9 +193,9 @@ class CustomerFormView extends GetView<CustomerController> {
       'city': _fields['city']!.text.trim(),
       'state': _fields['state']!.text.trim(),
       'pincode': _fields['pincode']!.text.trim(),
-      'customer_type': _type,
+      'customer_type': _type.value,
       'notes': _fields['notes']!.text.trim(),
-      'status': _status,
+      'status': _status.value,
     };
     try {
       final bool ok = await controller.saveCustomer(payload, id: id);

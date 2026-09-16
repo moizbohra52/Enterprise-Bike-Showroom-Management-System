@@ -18,10 +18,15 @@ import 'package:enterprise_bike_showroom/features/inventory/repositories/invento
 import 'package:enterprise_bike_showroom/features/products/controllers/product_controller.dart';
 
 /// Stock-in: add a physical bike to inventory.
-class StockInView extends GetView<InventoryController> {
-  // Not const: this widget owns mutable state (Rx / TextEditingController),
-  // and a const constructor cannot have initialized instance fields.
+class StockInView extends StatefulWidget {
   StockInView({super.key});
+
+  @override
+  State<StockInView> createState() => _StockInViewState();
+}
+
+class _StockInViewState extends State<StockInView> {
+  InventoryController get controller => Get.find<InventoryController>();
 
   @override
   Widget build(BuildContext context) {

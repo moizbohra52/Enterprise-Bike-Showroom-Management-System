@@ -9,6 +9,7 @@ import 'package:enterprise_bike_showroom/common/widgets/app_status_chip.dart';
 import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/insurance/controllers/insurance_controller.dart';
 import 'package:enterprise_bike_showroom/features/insurance/models/insurance_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Insurance policy details.
 class InsuranceDetailsView extends GetView<InsuranceDetailsController> {

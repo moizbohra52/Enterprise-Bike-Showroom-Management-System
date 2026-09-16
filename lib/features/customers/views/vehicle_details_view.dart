@@ -14,6 +14,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/customers/controllers/vehicle_controller.dart';
 import 'package:enterprise_bike_showroom/features/customers/models/customer_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Vehicle 360 — a customer vehicle with its complete history.
 class VehicleDetailsView extends GetView<VehicleDetailsController> {
@@ -39,7 +40,7 @@ class VehicleDetailsView extends GetView<VehicleDetailsController> {
             icon: Icons.engineering,
             variant: AppButtonVariant.outlined,
             onPressed: () => Get.toNamed(AppRoutes.serviceForm,
-                parameters: <String, String?>{'vehicleId': id}),
+                parameters: <String, String>{'vehicleId': id}),
           ),
       ],
       child: Obx(() {

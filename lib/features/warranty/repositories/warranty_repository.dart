@@ -15,14 +15,10 @@ class WarrantyRepository {
 
   Future<PaginatedResponse<WarrantyModel>> list(PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('warranties')
-          .select(
-            '*, customer:customers(name, phone), '
-            'vehicle:customer_vehicles(registration_number, chassis_number)',
-            count: CountOption.exact,
-          )
-          .range(query.offset, query.end);
+          .select('*, customer:customers(name, phone), '
+            'vehicle:customer_vehicles(registration_number, chassis_number)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -36,7 +32,8 @@ class WarrantyRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<WarrantyModel>.fromSupabase(
@@ -76,7 +73,7 @@ class WarrantyRepository {
           .eq('vehicle_id', vehicleId)
           .order('created_at', ascending: false);
       return <WarrantyModel>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) WarrantyModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {
@@ -93,7 +90,7 @@ class WarrantyRepository {
           .eq('warranty_id', warrantyId)
           .order('created_at', ascending: false);
       return <WarrantyClaimModel>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) WarrantyClaimModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

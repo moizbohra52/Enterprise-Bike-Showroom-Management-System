@@ -52,7 +52,7 @@ class AppTable<T> extends StatelessWidget {
     this.emptyTitle = 'Nothing here yet',
     this.emptyMessage,
     this.sortColumn,
-    this.sortAscending,
+    this.sortAscending = true,
     this.onSort,
     this.leadingCell,
     this.mobileCards,
@@ -124,7 +124,7 @@ class AppTable<T> extends StatelessWidget {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: WidgetStateColor.all(
+              headingRowColor: WidgetStateProperty.all(
                   theme.colorScheme.primary.withAlpha(18)),
               dataRowMinHeight: 46,
               dataRowMaxHeight: 56,
@@ -141,7 +141,8 @@ class AppTable<T> extends StatelessWidget {
                 for (final T item in items)
                   DataRow(
                     key: ValueKey<String>(keyOf(item)),
-                    onSelectChanged: onRowTap == null ? null : (_) => onRowTap!(item),
+                    onSelectChanged:
+                        onRowTap == null ? null : (_) => onRowTap!(item),
                     cells: <DataCell>[
                       for (final AppColumn<T> column in visible)
                         DataCell(
@@ -225,6 +226,8 @@ class AppTable<T> extends StatelessWidget {
         }
         final T item = items[index];
         if (mobileCards != null) return mobileCards!(context, item);
+        final Widget? leading =
+            leadingCell != null ? leadingCell!(item) : null;
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -233,17 +236,19 @@ class AppTable<T> extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: <Widget>[
-                  if (leadingCell != null) ...<Widget>[
-                    leadingCell!(item),
+                  if (leading != null) ...<Widget>[
+                    leading,
                     const SizedBox(width: 12),
                   ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          _primaryLabel(context, item, keyCols),
-                          style: theme.textTheme.titleSmall,
+                        DefaultTextStyle(
+                          style: (theme.textTheme.titleSmall ??
+                                  const TextStyle(fontSize: 14))
+                              .copyWith(),
+                          child: _primaryLabel(context, item, keyCols),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

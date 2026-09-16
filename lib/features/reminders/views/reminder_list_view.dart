@@ -25,7 +25,7 @@ class ReminderListView extends GetView<ReminderController> {
     return AppShell(
       title: 'Reminders',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.remindersCreate,
           child: AppButton(
             label: 'New Reminder',
@@ -224,5 +224,5 @@ class ReminderListView extends GetView<ReminderController> {
   }
 
   void _add() =>
-      Get.toNamed(AppRoutes.remindersForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.remindersForm)?.then((_) => controller.refresh());
 }

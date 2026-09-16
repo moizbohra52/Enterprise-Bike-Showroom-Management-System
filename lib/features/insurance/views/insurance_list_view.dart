@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/insurance/controllers/insurance_controller.dart';
 import 'package:enterprise_bike_showroom/features/insurance/models/insurance_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Insurance register.
 class InsuranceListView extends GetView<InsuranceController> {
@@ -25,7 +26,7 @@ class InsuranceListView extends GetView<InsuranceController> {
     return AppShell(
       title: 'Insurance',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.insuranceCreate,
           child: AppButton(
             label: 'Add Policy',
@@ -141,5 +142,5 @@ class InsuranceListView extends GetView<InsuranceController> {
   }
 
   void _add() =>
-      Get.toNamed(AppRoutes.insuranceForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.insuranceForm)?.then((_) => controller.refresh());
 }

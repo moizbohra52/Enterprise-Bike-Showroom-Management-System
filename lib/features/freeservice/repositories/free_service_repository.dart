@@ -23,7 +23,7 @@ class FreeServiceRepository {
           .eq('is_active', true)
           .order('name');
       return <FreeServicePlanModel>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) FreeServicePlanModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {
@@ -34,13 +34,9 @@ class FreeServiceRepository {
   Future<PaginatedResponse<FreeServiceGrantModel>> listGrants(
       PageQuery query) async {
     try {
-      var builder = supabase
+      dynamic builder = supabase
           .table('free_service_grants')
-          .select(
-            '*, vehicle:customer_vehicles(registration_number, chassis_number)',
-            count: CountOption.exact,
-          )
-          .range(query.offset, query.end);
+          .select('*, vehicle:customer_vehicles(registration_number, chassis_number)');
       final String? term = query.search;
       if (term != null && term.isNotEmpty) {
         builder = builder.or(
@@ -54,7 +50,8 @@ class FreeServiceRepository {
       builder = query.orderBy == null
           ? builder.order('created_at', ascending: query.ascending)
           : builder.order(query.orderBy, ascending: query.ascending);
-      final dynamic result = await builder;
+      builder = builder.range(query.offset, query.end);
+      final dynamic result = await (builder).count(CountOption.exact);
       // ignore: avoid_dynamic_calls
       final int total = SafeJson.asIntOr(result.count, 0);
       return PaginatedResponse<FreeServiceGrantModel>.fromSupabase(
@@ -78,7 +75,7 @@ class FreeServiceRepository {
           .eq('vehicle_id', vehicleId)
           .order('created_at', ascending: false);
       return <FreeServiceGrantModel>[
-        for (final dynamic row in SafeJson.asList(rows))
+        for (final dynamic row in SafeJson.asList(rows));
           if (row is Map) FreeServiceGrantModel.fromJson(SafeJson.asMap(row)),
       ];
     } catch (e) {

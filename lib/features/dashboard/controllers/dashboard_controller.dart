@@ -109,10 +109,9 @@ class DashboardController extends GetxController {
     try {
       dynamic builder = supabase
           .table(table)
-          .select('id', count: CountOption.exact)
-          .limit(1);
+          .select('id');
       builder = _applyFilters(builder, _scoped(filters), dateField, dateOp);
-      final dynamic result = await builder;
+      final dynamic result = await (builder).count(CountOption.exact);
       // PostgrestList carries `.count` when CountOption.exact is used.
       // ignore: avoid_dynamic_calls
       return SafeJson.asIntOr(result.count, 0);

@@ -1,5 +1,6 @@
 import 'package:enterprise_bike_showroom/common/models/base_model.dart';
 import 'package:enterprise_bike_showroom/core/utils/safe_json.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// A payment against an invoice (sale, EMI, service, etc.).
 class PaymentModel extends BaseModel {

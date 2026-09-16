@@ -139,8 +139,8 @@ class TopBarActions extends StatelessWidget {
           tooltip: 'Global search',
           onPressed: () => _openSearch(context, ''),
         ),
-        const _SyncIndicator(),
-        const _NotificationBell(),
+        _SyncIndicator(),
+        _NotificationBell(),
         const SizedBox(width: 4),
         _ProfileMenu(session: session),
       ],
@@ -238,7 +238,7 @@ class _ProfileMenu extends StatelessWidget {
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
-    final bool confirmed = await showDialog<bool>(
+    final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text('Sign out?'),

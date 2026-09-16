@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/service/controllers/service_controller.dart';
 import 'package:enterprise_bike_showroom/features/service/models/service_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Workshop board.
 class ServiceListView extends GetView<ServiceController> {
@@ -25,7 +26,7 @@ class ServiceListView extends GetView<ServiceController> {
     return AppShell(
       title: 'Service',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.serviceCreate,
           child: AppButton(
             label: 'New Job Card',
@@ -154,5 +155,5 @@ class ServiceListView extends GetView<ServiceController> {
   }
 
   void _new() =>
-      Get.toNamed(AppRoutes.serviceForm).then((_) => controller.refresh());
+      Get.toNamed(AppRoutes.serviceForm)?.then((_) => controller.refresh());
 }

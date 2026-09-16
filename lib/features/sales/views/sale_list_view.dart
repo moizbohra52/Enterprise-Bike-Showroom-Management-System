@@ -16,6 +16,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/sales/controllers/sale_controller.dart';
 import 'package:enterprise_bike_showroom/features/sales/models/sale_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Sales register (StatefulWidget: local date-filter state).
 class SaleListView extends StatefulWidget {
@@ -36,7 +37,7 @@ class _SaleListViewState extends State<SaleListView> {
     return AppShell(
       title: 'Sales',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.salesCreate,
           child: AppButton(
             label: 'New Sale',
@@ -49,7 +50,7 @@ class _SaleListViewState extends State<SaleListView> {
     );
   }
 
-  void _newSale() => Get.toNamed(AppRoutes.saleForm).then((_) => controller.refresh());
+  void _newSale() => Get.toNamed(AppRoutes.saleForm)?.then((_) => controller.refresh());
 
   Widget _content() {
     return Padding(

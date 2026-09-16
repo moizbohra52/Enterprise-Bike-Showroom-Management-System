@@ -24,7 +24,7 @@ class AppResponsiveLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (context.isMobile) return mobile(context);
-    if (context.isTablet) {
+    if (context.isAppTablet) {
       return (tablet ?? desktop)(context);
     }
     return desktop(context);
@@ -54,7 +54,7 @@ class AppAdaptiveGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final int columns = context.isDesktop
         ? desktopColumns
-        : context.isTablet
+        : context.isAppTablet
             ? tabletColumns
             : 1;
     return GridView.builder(

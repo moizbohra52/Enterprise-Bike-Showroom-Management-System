@@ -12,6 +12,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/finance/controllers/loan_controller.dart';
 import 'package:enterprise_bike_showroom/features/finance/models/loan_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Loan register.
 class LoanListView extends GetView<LoanController> {

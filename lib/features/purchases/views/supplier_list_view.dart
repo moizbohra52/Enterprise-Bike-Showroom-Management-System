@@ -25,7 +25,7 @@ class SupplierListView extends GetView<SupplierController> {
     return AppShell(
       title: 'Suppliers',
       actions: <Widget>[
-        const AppPermissionView(
+        AppPermissionView(
           permission: Permissions.purchasesCreate,
           child: AppButton(
             label: 'Add Supplier',
@@ -132,11 +132,11 @@ class SupplierListView extends GetView<SupplierController> {
     );
   }
 
-  void _add() => Get.toNamed(AppRoutes.supplierForm).then(
+  void _add() => Get.toNamed(AppRoutes.supplierForm)?.then(
         (_) => controller.refresh(),
       );
 
   void _edit(SupplierModel supplier) => Get.toNamed(
         AppRoutes.withId(AppRoutes.supplierForm, supplier.id!),
-      ).then((_) => controller.refresh());
+      )?.then((_) => controller.refresh());
 }

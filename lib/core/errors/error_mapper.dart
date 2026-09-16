@@ -76,6 +76,9 @@ class ErrorMapper {
           return NetworkException();
         }
         return UnknownException.withDetails(error);
+      default:
+        // Covers newer DioExceptionType values (e.g. transformTimeout).
+        return UnknownException.withDetails(error);
     }
   }
 

@@ -14,6 +14,7 @@ import 'package:enterprise_bike_showroom/core/helpers/formatters.dart';
 import 'package:enterprise_bike_showroom/features/auth/controllers/session_controller.dart';
 import 'package:enterprise_bike_showroom/features/service/controllers/service_controller.dart';
 import 'package:enterprise_bike_showroom/features/service/models/service_models.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Job card details + complete (delivery) + status actions.
 class ServiceDetailsView extends GetView<ServiceDetailsController> {

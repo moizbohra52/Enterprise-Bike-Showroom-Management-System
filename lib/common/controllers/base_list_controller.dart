@@ -46,8 +46,8 @@ class BaseListController<T> extends GetxController {
     state.pageSize = pageSize;
   }
 
-  /// Loads one page: `query -> List<T>`.
-  final Future<List<T>> Function(PageQuery query) loader;
+  /// Loads one page: `query -> PaginatedResponse<T>`.
+  final Future<PaginatedResponse<T>> Function(PageQuery query) loader;
 
   /// Mutable query state.
   final ListQueryState state = ListQueryState();
@@ -90,8 +90,7 @@ class BaseListController<T> extends GetxController {
   Future<void> loadMore() async {
     if (!hasMore.value || isLoading.value) return;
     state.page += 1;
-    final bool append = true;
-    await _run(append: append);
+    await _run(append: true);
   }
 
   /// Debounced search update.
@@ -153,15 +152,13 @@ class BaseListController<T> extends GetxController {
     errorMessage.value = '';
     try {
       final PageQuery query = state.toQuery();
-      final List<T> rows = await loader(query);
+      final PaginatedResponse<T> response = await loader(query);
       if (append) {
-        items.addAll(rows);
+        items.addAll(response.items);
       } else {
-        items.assignAll(rows);
+        items.assignAll(response.items);
       }
-      // Loader returns a plain list; total info is supplied via the
-      // controller's `setPageInfo` hook by repositories that know the count.
-      hasMore.value = rows.length >= query.pageSize;
+      setPageInfo(response.info);
     } on AppException catch (e) {
       errorMessage.value = e.message;
       AppLogger.error('LIST', e.message, error: e.details);

@@ -16,6 +16,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/customers/controllers/customer_controller.dart';
 import 'package:enterprise_bike_showroom/features/customers/models/customer_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Customer 360 — complete customer dashboard.
 class CustomerDetailsView extends GetView<CustomerDetailsController> {
@@ -41,7 +42,7 @@ class CustomerDetailsView extends GetView<CustomerDetailsController> {
             icon: Icons.point_of_sale,
             variant: AppButtonVariant.outlined,
             onPressed: () => Get.toNamed(AppRoutes.saleForm,
-                parameters: <String, String?>{'customerId': id}),
+                parameters: <String, String>{'customerId': id}),
           ),
         if (session.can(Permissions.customersEdit))
           const SizedBox(width: 8),

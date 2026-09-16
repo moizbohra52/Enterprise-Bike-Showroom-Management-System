@@ -15,6 +15,7 @@ import 'package:enterprise_bike_showroom/features/auth/controllers/session_contr
 import 'package:enterprise_bike_showroom/features/sales/controllers/sale_controller.dart';
 import 'package:enterprise_bike_showroom/features/sales/models/sale_models.dart';
 import 'package:enterprise_bike_showroom/routes/app_routes.dart';
+import 'package:enterprise_bike_showroom/core/extensions/num_extensions.dart';
 
 /// Sale details: lines, totals, invoice + payments, actions.
 class SaleDetailsView extends GetView<SaleDetailsController> {
@@ -48,7 +49,7 @@ class SaleDetailsView extends GetView<SaleDetailsController> {
                   icon: Icons.payments_outlined,
                   variant: AppButtonVariant.outlined,
                   onPressed: () => Get.toNamed(AppRoutes.paymentForm,
-                      parameters: <String, String?>{'invoiceId': sale.invoiceId}),
+                      parameters: <String, String>{'invoiceId': sale.invoiceId!}),
                 ),
               const SizedBox(width: 8),
               if (session.can(Permissions.salesCancel) &&
